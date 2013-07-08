@@ -2,7 +2,7 @@
 <package>
   <name>topic_republisher</name>
   <version>0.0.0</version>
-  <description>The topic_replublisher package</description>
+  <description>The topic_republisher package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag --> 
   <!-- Example:  -->
@@ -19,7 +19,7 @@
   <!-- Url tags are optional, but mutiple are allowed, one per tag -->
   <!-- Optional attribute type can be: website, bugtracker, or repository -->
   <!-- Example: -->
-  <!-- <url type="website">http://ros.org/wiki/topic_replublisher</url> -->
+  <!-- <url type="website">http://ros.org/wiki/topic_republisher</url> -->
 
 
   <!-- Author tags are optional, mutiple are allowed, one per tag -->
