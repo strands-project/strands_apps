@@ -22,8 +22,8 @@ class JointStateRepublisher():
                 vec3 = Vector3()
     
                 vec3.x = 0.0
-                vec3.y = data.position[tilt_idx]
-                vec3.z = data.position[pan_idx]
+                vec3.y = data.position[pan_idx]
+                vec3.z = data.position[tilt_idx]
 
                 self.pub.publish(vec3)
 
