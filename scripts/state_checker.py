@@ -11,10 +11,9 @@ class stateChecker:
 	def __init__(self):
 		self.start_time = time.time()
 		self.prevPose = Pose()
-		self.emailSend = False
+		self.emailSent = False
 	
     		rospy.init_node('state_checker', anonymous=True)
-		rospy.Subscriber("odom", Odometry, self.callback)
 
 		self.sender = rospy.get_param('~sender')
 		self.sender_password = rospy.get_param('~password')
@@ -22,8 +21,9 @@ class stateChecker:
 		self.email_title = rospy.get_param('~email_title')
 		self.email_body = rospy.get_param('~email_body')
 		self.email_attachment= rospy.get_param('~email_attachment','')
-		self.odometry_timeout = float(rospy.get_param('~timeout',90.0)) # seconds
+		self.odometry_timeout = float(rospy.get_param('~timeout',10.0)) # seconds
 
+		rospy.Subscriber("odom", Odometry, self.callback)
 		print self.sender, self.sender_password, self.receiver, self.email_title, self.email_body
 
 
