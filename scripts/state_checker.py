@@ -11,11 +11,21 @@ class stateChecker:
 	def __init__(self):
 		self.start_time = time.time()
 		self.prevPose = Pose()
-		self.timeout_time = 90 # seconds
 		self.emailSend = False
 	
     		rospy.init_node('state_checker', anonymous=True)
 		rospy.Subscriber("odom", Odometry, self.callback)
+
+		self.sender = rospy.get_param('~sender')
+		self.sender_password = rospy.get_param('~password')
+		self.receiver = rospy.get_param('~receiver')
+		self.email_title = rospy.get_param('~email_title')
+		self.email_body = rospy.get_param('~email_body')
+		self.email_attachment= rospy.get_param('~email_attachment','')
+		self.odometry_timeout = float(rospy.get_param('~timeout',90.0)) # seconds
+
+		print self.sender, self.sender_password, self.receiver, self.email_title, self.email_body
+
 
 	def callback(self,data):
 		if (data.pose.pose.position.x != self.prevPose.position.x):
@@ -25,10 +35,10 @@ class stateChecker:
 			self.start_time = time.time()
 		else :
 			elapsedTime = time.time() - self.start_time
-			if (elapsedTime > self.timeout_time):
+			if (elapsedTime > self.odometry_timeout):
 				if (not self.emailSent):
 					print "I haven't moved in ",elapsedTime," seconds. HELP!!!!"
-					sendmail("rosiethesmartrobot@gmail.com", "rosie@123",["nbore@kth.se", "raambrus@kth.se"], "I think I'm stuck", "HELP!!!\n\nI haven't moved in very long, please come take a look.","")
+					sendmail(self.sender, self.sender_password,self.receiver, self.email_title,self.email_body,self.email_attachment)
 					self.emailSent = True
 				
 
