@@ -7,7 +7,7 @@ from email.MIMEText import MIMEText
 from email import Encoders
 import os
 
-def mail(sender, pwd, to, subject, text, attach):
+def sendmail(sender, pwd, to, subject, text, attach):
    msg = MIMEMultipart()
 
    msg['From'] = sender
