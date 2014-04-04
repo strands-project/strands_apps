@@ -2,10 +2,11 @@
 #include <std_msgs/String.h>
 #include <sensor_msgs/LaserScan.h>
 #include <geometry_msgs/Twist.h>
+#include <strands_navigation_msgs/MonitoredNavigationAction.h>
 #include <scitos_apps_msgs/RampClimbingAction.h>
 #include <actionlib/server/simple_action_server.h>
 
-typedef actionlib::SimpleActionServer<scitos_apps_msgs::RampClimbingAction> Server;
+typedef actionlib::SimpleActionServer<strands_navigation_msgs::MonitoredNavigationAction> Server;
 Server *server;
 float tolerance = 0.025;
 float angleTolerance = 0.10;
@@ -157,9 +158,10 @@ void scanCallback (const sensor_msgs::LaserScan::ConstPtr& scan_msg)
 	}
 }
 
-void actionServerCallback(const scitos_apps_msgs::RampClimbingGoalConstPtr& goal, Server* as)
+void actionServerCallback(const strands_navigation_msgs::MonitoredNavigationGoalConstPtr& goal, Server* as)
 {
-	scitos_apps_msgs::RampClimbingResult result;
+	strands_navigation_msgs::MonitoredNavigationResult result;
+//	scitos_apps_msgs::RampClimbingResult result;
 	fwSpeed = 0.0;
 	misdetections = 0;
 	minPoints = 25;
