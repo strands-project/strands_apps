@@ -7,7 +7,6 @@ project(scitos_door_pass)
 find_package(catkin REQUIRED COMPONENTS roscpp rospy std_msgs scitos_msgs scitos_apps_msgs strands_navigation_msgs message_generation genmsg actionlib_msgs actionlib)
 set ( CMAKE_CXX_FLAGS "-ggdb")
 
-
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
@@ -130,14 +129,18 @@ include_directories(include
 # catkin_add_nosetests(test)
 
 #add_library(CDump src/CDump.cpp)
-#add_library(CTimer src/CTimer.cpp)
+add_library(CDoorDetection src/CDoorDetection.cpp)
 
 #target_link_libraries(ramp_climb ${catkin_LIBRARIES})
 add_executable(door_pass src/door_pass.cpp)
+add_executable(door_detect src/door_detect.cpp)
+target_link_libraries (door_pass  CDoorDetection)
+target_link_libraries (door_detect  CDoorDetection)
 
 add_dependencies(door_pass scitos_msgs_gencpp scitos_apps_msgs_genccp actionlib strands_navigation_msgs scitos_apps_msgs actionlib_msgs scitos_apps_msgs_generate_messages_cpp)
+add_dependencies(door_detect scitos_msgs_gencpp scitos_apps_msgs_genccp actionlib strands_navigation_msgs scitos_apps_msgs actionlib_msgs scitos_apps_msgs_generate_messages_cpp)
 
-#target_link_libraries (ramp_climb  CDump)
 #target_link_libraries (ramp_climb  CTimer)
 
 target_link_libraries (door_pass  ${catkin_LIBRARIES})
+target_link_libraries (door_detect  ${catkin_LIBRARIES})
