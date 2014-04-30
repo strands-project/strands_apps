@@ -1,4 +1,4 @@
 ### Overview
 
-Simple behaviour for climbing up the ramp installed in UoL Witham Wharf office.
-Just position the robot near to the ramp and call the rampClimbingServer service.
+Simple behaviour for passing thorugh narrow doors.
+Just position the robot near to the door and send the monitored nav goal.
