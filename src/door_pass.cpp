@@ -3,11 +3,11 @@
 #include <vector>
 #include <sensor_msgs/LaserScan.h>
 #include <geometry_msgs/Twist.h>
-#include <strands_navigation_msgs/MonitoredNavigationAction.h>
+#include <move_base_msgs/MoveBaseAction.h>
 #include <actionlib/server/simple_action_server.h>
 #include "CDoorDetection.h"
 
-typedef actionlib::SimpleActionServer<strands_navigation_msgs::MonitoredNavigationAction> Server;
+typedef actionlib::SimpleActionServer<move_base_msgs::MoveBaseAction> Server;
 Server *server;
 ros::Subscriber scan_sub;
 
@@ -109,9 +109,9 @@ void scanCallback (const sensor_msgs::LaserScan::ConstPtr& scan_msg)
 	}
 }
 
-void actionServerCallback(const strands_navigation_msgs::MonitoredNavigationGoalConstPtr& goal, Server* as)
+void actionServerCallback(const move_base_msgs::MoveBaseGoalConstPtr& goal, Server* as)
 {
-	strands_navigation_msgs::MonitoredNavigationResult result;
+	move_base_msgs::MoveBaseResult result;
 	misdetections = 0;
 	state = APPROACH;
 	while (state == DETECT || state == APPROACH || state == ADJUST || state == PASS || state == LEAVE){
