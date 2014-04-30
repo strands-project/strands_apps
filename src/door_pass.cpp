@@ -1,4 +1,5 @@
 #include <ros/ros.h>
+#include <tf/tf.h>
 #include <std_msgs/String.h>
 #include <vector>
 #include <sensor_msgs/LaserScan.h>
@@ -10,6 +11,7 @@
 typedef actionlib::SimpleActionServer<move_base_msgs::MoveBaseAction> Server;
 Server *server;
 ros::Subscriber scan_sub;
+ros::Subscriber robot_pose;
 
 float maxDistance = 3.0;		//max range taken into consideration
 float defaultSpeed = 0.15;		//default forward speed of the robot
@@ -22,6 +24,7 @@ bool debug = true;
 
 typedef enum{
 	IDLE,
+	TURNING,
 	DETECT,
 	APPROACH,
 	ADJUST,
@@ -36,7 +39,31 @@ typedef enum{
 EClimbState state = IDLE;
 ros::Publisher cmd_vel;
 geometry_msgs::Twist base_cmd;
- 
+float goalX;
+float goalY;
+
+void poseCallback(const geometry_msgs::Pose::ConstPtr& msg)
+{
+	if (state == TURNING){
+		float rX,rY;
+		rX=rY=0;
+		rX = goalX-msg->position.x;
+		rY = goalY-msg->position.y;
+		float currentAngle = tf::getYaw(msg->orientation);
+		base_cmd.linear.x = 0; 
+		currentAngle = (atan2(rY,rX)-currentAngle);
+		while (currentAngle >= M_PI) currentAngle-= 2*M_PI;
+		while (currentAngle < -M_PI) currentAngle += 2*M_PI;
+		base_cmd.angular.z = currentAngle*0.5;
+		maxDistance = fmin(sqrt(rX*rX+rY*rY),maxDistance);
+		if (fabs(currentAngle) < 0.1){
+			base_cmd.angular.z = 0;
+			state = APPROACH;
+		} 
+		cmd_vel.publish(base_cmd);
+	}
+}
+
 void scanCallback (const sensor_msgs::LaserScan::ConstPtr& scan_msg)
 {
 	if (state == APPROACH || state == ADJUST || state == PASS || state == LEAVE){
@@ -112,8 +139,11 @@ void scanCallback (const sensor_msgs::LaserScan::ConstPtr& scan_msg)
 void actionServerCallback(const move_base_msgs::MoveBaseGoalConstPtr& goal, Server* as)
 {
 	move_base_msgs::MoveBaseResult result;
+	goalX = goal->target_pose.pose.position.x;
+	goalY = goal->target_pose.pose.position.y;
 	misdetections = 0;
-	state = APPROACH;
+	state = TURNING;
+	if (goalX == 0 && goalY == 0) state = APPROACH;
 	while (state == DETECT || state == APPROACH || state == ADJUST || state == PASS || state == LEAVE){
 		if (misdetections > maxMisdetections || state == LEAVE){
 			if (state == LEAVE) state = SUCCESS; else state = FAIL;
@@ -132,6 +162,7 @@ int main(int argc, char** argv)
 	ros::init(argc, argv, "doorPassing");
 	ros::NodeHandle n;
 	cmd_vel = n.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
+	robot_pose = n.subscribe("/robot_pose", 1000, poseCallback);
 	server = new Server(n, "doorPassing", boost::bind(&actionServerCallback, _1, server), false);
 	server->start();
 	scan_sub = n.subscribe("scan", 100, scanCallback);
