@@ -46,7 +46,6 @@
   <build_depend>std_msgs</build_depend>
   <build_depend>scitos_msgs</build_depend>
   <build_depend>scitos_apps_msgs</build_depend>
-  <build_depend>strands_navigation_msgs</build_depend>
   <run_depend>message_runtime</run_depend>
   <run_depend>image_transport</run_depend>
   <run_depend>roscpp</run_depend>

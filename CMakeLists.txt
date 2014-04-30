@@ -4,7 +4,7 @@ project(scitos_ramp_climb)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS roscpp rospy std_msgs scitos_msgs scitos_apps_msgs strands_navigation_msgs message_generation genmsg actionlib_msgs actionlib)
+find_package(catkin REQUIRED COMPONENTS roscpp rospy std_msgs scitos_msgs scitos_apps_msgs message_generation genmsg actionlib_msgs actionlib)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -133,7 +133,9 @@ include_directories(include
 #target_link_libraries(ramp_climb ${catkin_LIBRARIES})
 add_executable(ramp_climb src/ramp_climb.cpp)
 
+# nah: not sure which one to keep, so maybe both...
 add_dependencies(ramp_climb ${catkin_EXPORTED_TARGETS})
+add_dependencies(ramp_climb scitos_msgs_gencpp scitos_apps_msgs_genccp actionlib scitos_apps_msgs actionlib_msgs scitos_apps_msgs_generate_messages_cpp)
 
 #target_link_libraries (ramp_climb  CDump)
 #target_link_libraries (ramp_climb  CTimer)
