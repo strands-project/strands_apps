@@ -51,7 +51,7 @@ void actionServerCallback(const strands_navigation_msgs::DoorCheckGoalConstPtr& 
 		if (measurements <= 0){
 			// if (detections > 0) state = SUCCESS; else state = FAIL;
 			// SUCCESS means that it ran to completion, result communicates open/closed
-			state = SUCCESS
+			state = SUCCESS;
 		}
 		usleep(20000);
 	}
