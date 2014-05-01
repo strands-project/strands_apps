@@ -1,4 +1,5 @@
 #include <ros/ros.h>
+#include <tf/tf.h>
 #include <std_msgs/String.h>
 #include <sensor_msgs/LaserScan.h>
 #include <geometry_msgs/Twist.h>
@@ -7,6 +8,9 @@
 #include <actionlib/server/simple_action_server.h>
 
 typedef actionlib::SimpleActionServer<move_base_msgs::MoveBaseAction> Server;
+ros::Subscriber robot_pose;
+float goalX;
+float goalY;
 
 Server *server;
 float tolerance = 0.025;
@@ -18,6 +22,7 @@ int minPoints =0;
 
 typedef enum{
 	IDLE,
+	TURNING,
 	PROGRESS,
 	FINAL,
 	STOPPING,
@@ -31,6 +36,27 @@ EClimbState state = IDLE;
 ros::Publisher cmd_vel;
 geometry_msgs::Twist base_cmd;
 float fwSpeed = 0;
+
+void poseCallback(const geometry_msgs::Pose::ConstPtr& msg)
+{
+	if (state == TURNING){
+		float rX,rY;
+		rX=rY=0;
+		rX = goalX-msg->position.x;
+		rY = goalY-msg->position.y;
+		float currentAngle = tf::getYaw(msg->orientation);
+		base_cmd.linear.x = 0; 
+		currentAngle = (atan2(rY,rX)-currentAngle);
+		while (currentAngle >= M_PI) currentAngle-= 2*M_PI;
+		while (currentAngle < -M_PI) currentAngle += 2*M_PI;
+		base_cmd.angular.z = currentAngle*0.5;
+		if (fabs(currentAngle) < 0.1){
+			base_cmd.angular.z = 0;
+			state = PROGRESS;
+		} 
+		cmd_vel.publish(base_cmd);
+	}
+}
      
 void precise(float *ai,float *bi,float *x,float *y,int num_ranges)
 {
@@ -166,8 +192,9 @@ void actionServerCallback(const move_base_msgs::MoveBaseGoalConstPtr& goal, Serv
 	fwSpeed = 0.0;
 	misdetections = 0;
 	minPoints = 25;
-	state = PROGRESS;
-	while (state == PROGRESS || state == FINAL){
+	state = TURNING;
+	if (goalX == 0 && goalY == 0) state = PROGRESS;
+	while (state == TURNING || state == PROGRESS || state == FINAL){
 		if (misdetections > 20){
 			if (state == FINAL) state = SUCCESS; else state = FAIL;
 		}
@@ -189,6 +216,7 @@ int main(int argc, char** argv)
 	server = new Server(n, "rampClimbingServer", boost::bind(&actionServerCallback, _1, server), false);
 	server->start();
 	scan_sub = n.subscribe("scan", 100, scanCallback);
+	robot_pose = n.subscribe("/robot_pose", 1000, poseCallback);
 	while (ros::ok()){
 		if (server->isPreemptRequested() && state != IDLE) state = PREEMPTED;
 		if (state == STOPPING){
