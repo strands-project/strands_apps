@@ -1,5 +1,4 @@
 <launch>
 	<node pkg="scitos_ramp_climb" type="ramp_climb" name="ramp_climbing" output="screen" >
-	<remap from="/cmd_vel" to="/cmd_vel_mux/input/navigation"/>
 	</node>
 </launch> 
