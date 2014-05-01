@@ -1,0 +1,6 @@
+# the time to wait until
+string launch_key
+---
+---
+# feedback message
+bool ready
