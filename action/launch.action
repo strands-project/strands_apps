@@ -1,5 +1,6 @@
 # the time to wait until
-string launch_key
+string pkg
+string launch_file
 ---
 ---
 # feedback message

@@ -25,8 +25,7 @@ class RoslaunchServer(object):
 
     def execute_cb(self, goal):
         rospy.loginfo('call roslaunch')
-        command = "exec roslaunch strands_morse uol_mht_nav2d.launch"
-        command = "exec xev"
+        command = "exec roslaunch " + goal.pkg + " " + goal.launch_file
         self.p = subprocess.Popen(
             command, stdin=subprocess.PIPE, shell=True)
         rospy.loginfo(self.p.pid)
@@ -37,9 +36,14 @@ class RoslaunchServer(object):
             if self._as.is_preempt_requested():
                 rospy.loginfo('Logging is preempted')
                 self.p.terminate()
-                #self.p.send_signal(3)
+                # self.p.send_signal(3)
                 self._as.set_preempted()
                 break
+            else:
+                r = rospy.Rate(1.0)
+                self._feedback.ready = (self.p.poll() is None)
+                self._as.publish_feedback(self._feedback)
+                r.sleep()
 
 
 if __name__ == '__main__':
