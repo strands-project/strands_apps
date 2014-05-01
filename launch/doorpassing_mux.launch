@@ -1,0 +1,4 @@
+<launch>
+	<node pkg="scitos_door_pass" type="door_pass" name="door_pass_node" output="screen" >
+	</node>
+</launch> 

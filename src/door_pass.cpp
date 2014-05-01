@@ -144,7 +144,7 @@ void actionServerCallback(const move_base_msgs::MoveBaseGoalConstPtr& goal, Serv
 	misdetections = 0;
 	state = TURNING;
 	if (goalX == 0 && goalY == 0) state = APPROACH;
-	while (state == DETECT || state == APPROACH || state == ADJUST || state == PASS || state == LEAVE){
+	while (state == TURNING || state == DETECT || state == APPROACH || state == ADJUST || state == PASS || state == LEAVE){
 		if (misdetections > maxMisdetections || state == LEAVE){
 			if (state == LEAVE) state = SUCCESS; else state = FAIL;
 		}
