@@ -4,6 +4,7 @@ import roslib
 roslib.load_manifest('roslaunch_axserver')
 import rospy
 import subprocess
+import sys
 
 import actionlib
 
@@ -17,33 +18,30 @@ class RoslaunchServer(object):
 
     def __init__(self, name):
         self._action_name = name
-        self._as = actionlib.SimpleActionServer(
+        self._as = actionlib.ActionServer(
             self._action_name, roslaunch_axserver.msg.launchAction,
-            execute_cb=self.execute_cb)
+            self.execute_cb, self.cancel_cb)
         self._as.start()
+        self.p = {}
         rospy.loginfo('Server is up')
 
-    def execute_cb(self, goal):
+    def cancel_cb(self, gh):
+        rospy.loginfo('cancel roslaunch')
+        self.p[gh.get_goal_id()].terminate()
+        gh.set_canceled()
+
+    def execute_cb(self, gh):
         rospy.loginfo('call roslaunch')
+        goal = gh.get_goal()
         command = "exec roslaunch " + goal.pkg + " " + goal.launch_file
-        self.p = subprocess.Popen(
-            command, stdin=subprocess.PIPE, shell=True)
-        rospy.loginfo(self.p.pid)
-        # process = p
-        # print p.stdout.read()
-        # check if the goal is preempted
-        while 1:
-            if self._as.is_preempt_requested():
-                rospy.loginfo('Logging is preempted')
-                self.p.terminate()
-                # self.p.send_signal(3)
-                self._as.set_preempted()
-                break
-            else:
-                r = rospy.Rate(1.0)
-                self._feedback.ready = (self.p.poll() is None)
-                self._as.publish_feedback(self._feedback)
-                r.sleep()
+        try:
+            self.p[gh.get_goal_id()] = subprocess.Popen(
+                command, stdin=subprocess.PIPE, shell=True)
+            rospy.loginfo(self.p[gh.get_goal_id()].pid)
+            gh.set_accepted()
+        except:
+            print "Unexpected error:", sys.exc_info()[0]
+            gh.set_rejected()
 
 
 if __name__ == '__main__':
