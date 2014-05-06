@@ -137,8 +137,8 @@ add_executable(door_detect src/door_detect.cpp)
 target_link_libraries (door_pass  CDoorDetection)
 target_link_libraries (door_detect  CDoorDetection)
 
-add_dependencies(door_pass scitos_msgs_gencpp scitos_apps_msgs_genccp actionlib strands_navigation_msgs scitos_apps_msgs actionlib_msgs scitos_apps_msgs_generate_messages_cpp)
-add_dependencies(door_detect scitos_msgs_gencpp scitos_apps_msgs_genccp actionlib strands_navigation_msgs scitos_apps_msgs actionlib_msgs scitos_apps_msgs_generate_messages_cpp)
+add_dependencies(door_pass ${catkin_EXPORTED_TARGETS})
+add_dependencies(door_detect ${catkin_EXPORTED_TARGETS})
 
 #target_link_libraries (ramp_climb  CTimer)
 
