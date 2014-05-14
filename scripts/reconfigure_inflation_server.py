@@ -42,7 +42,7 @@ class ReconfigureInflationServer(object):
             if self.server.is_preempt_requested():
                 self.reset_move_base_pars()
                 self.move_base_action_client.cancel_goal()
-                self.server.set_preempted(self.move_base_action_client.get_result())
+                self.server.set_preempted() #self.move_base_action_client.get_result())
                 return
             self.move_base_action_client.wait_for_result(rospy.Duration(0.2))
             status = self.move_base_action_client.get_state()
@@ -51,11 +51,11 @@ class ReconfigureInflationServer(object):
         
         self.reset_move_base_pars()
         if status == GoalStatus.PREEMPTED:
-            self.server.set_preempted(self.move_base_action_client.get_result())
+            self.server.set_preempted() #self.move_base_action_client.get_result())
         elif status == GoalStatus.SUCCEEDED:
             self.server.set_succeeded(self.move_base_action_client.get_result())
         else:
-            self.server.set_aborted(self.move_base_action_client.get_result())
+            self.server.set_aborted()#self.move_base_action_client.get_result())
 
 if __name__ == '__main__':
     server = ReconfigureInflationServer()
