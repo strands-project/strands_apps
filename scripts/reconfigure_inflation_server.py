@@ -39,13 +39,13 @@ class ReconfigureInflationServer(object):
         self.move_base_action_client.send_goal(goal)
         status = self.move_base_action_client.get_state()
         while status == GoalStatus.PENDING or status == GoalStatus.ACTIVE:
-            status = self.move_base_action_client.get_state()
             if self.server.is_preempt_requested():
                 self.reset_move_base_pars()
                 self.move_base_action_client.cancel_goal()
                 self.server.set_preempted(self.move_base_action_client.get_result())
                 return
             self.move_base_action_client.wait_for_result(rospy.Duration(0.2))
+            status = self.move_base_action_client.get_state()
         
         print "Reset the inflation radius to ", self.prev_local_inflation
         
