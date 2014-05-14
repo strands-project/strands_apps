@@ -50,11 +50,12 @@ class ReconfigureInflationServer(object):
         print "Reset the inflation radius to ", self.prev_local_inflation
         
         self.reset_move_base_pars()
-        if status == GoalStatus.ABORTED:
-            self.server.set_aborted(self.move_base_action_client.get_result())
         if status == GoalStatus.PREEMPTED:
             self.server.set_preempted(self.move_base_action_client.get_result())
-        self.server.set_succeeded(self.move_base_action_client.get_result())
+        elif status == GoalStatus.SUCCEEDED:
+            self.server.set_succeeded(self.move_base_action_client.get_result())
+        else
+            self.server.set_aborted(self.move_base_action_client.get_result())
 
 if __name__ == '__main__':
     server = ReconfigureInflationServer()
