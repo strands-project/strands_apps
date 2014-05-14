@@ -54,7 +54,7 @@ class ReconfigureInflationServer(object):
             self.server.set_preempted(self.move_base_action_client.get_result())
         elif status == GoalStatus.SUCCEEDED:
             self.server.set_succeeded(self.move_base_action_client.get_result())
-        else
+        else:
             self.server.set_aborted(self.move_base_action_client.get_result())
 
 if __name__ == '__main__':
