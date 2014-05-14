@@ -8,7 +8,7 @@ import actionlib
 
 class ReconfigureInflationServer(object):
     def __init__(self):
-        rospy.init_node('backtrack_actionserver')
+        rospy.init_node('reconfigure_inflation_server')
         
         self.move_base_action_client = actionlib.SimpleActionClient('/move_base', MoveBaseAction)
         self.local_reconfig_client = dynamic_reconfigure.client.Client('/move_base/local_costmap/inflation_layer')
