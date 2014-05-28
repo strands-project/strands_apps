@@ -4,7 +4,7 @@ project(scitos_door_pass)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS roscpp rospy std_msgs scitos_msgs scitos_apps_msgs strands_navigation_msgs message_generation genmsg actionlib_msgs actionlib)
+find_package(catkin REQUIRED COMPONENTS roscpp rospy std_msgs nav_msgs scitos_msgs scitos_apps_msgs strands_navigation_msgs message_generation genmsg actionlib_msgs actionlib)
 set ( CMAKE_CXX_FLAGS "-ggdb")
 
 ## System dependencies are found with CMake's conventions
