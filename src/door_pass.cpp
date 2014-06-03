@@ -23,7 +23,7 @@ int maxMisdetections = 50;		//decides when door not detected
 int misdetections = 0;
 bool debug = true;
 
-int MAX_CLOSED_DOOR_COUNT=5;
+int MAX_FURTHER_COUNT=10;
 
 typedef enum{
 	IDLE,
@@ -47,18 +47,29 @@ geometry_msgs::Twist base_cmd;
 nav_msgs::Path empty_path = nav_msgs::Path(); //to make sure help is not asked when door is closed
 float goalX;
 float goalY;
-float distToGoal;
+float prevDistToGoal;
+float distToGoal=0;
+int gettingFurtherCounter=0;
 
 
 
 
 void poseCallback(const geometry_msgs::Pose::ConstPtr& msg)
 {       
+    if(state != IDLE) {
         float poseX=msg->position.x;
         float poseY=msg->position.y;
         float rX=goalX-poseX;
         float rY = goalY-poseY;
+        prevDistToGoal=distToGoal;
         distToGoal=sqrt(rX*rX+rY*rY);
+        if (prevDistToGoal < distToGoal) {
+            gettingFurtherCounter++;
+            printf("GETTING FURTHER AWAY FROM GOAL\n");
+        } else {
+            printf("GETTING CLOSER TO GOAL\n");
+            gettingFurtherCounter=0;
+        }
         
         float currentAngle = tf::getYaw(msg->orientation);
         float closedDoorFinalAngle=1.550;
@@ -97,11 +108,12 @@ void poseCallback(const geometry_msgs::Pose::ConstPtr& msg)
                 printf("PUBLISHING TO CMD_VEL TO GET INTO PRE DEFINED ORIENTATION\n");
                 cmd_vel.publish(base_cmd);
         }
-            
+    }        
             
 }
 
-void scanCallback (const sensor_msgs::LaserScan::ConstPtr& scan_msg) {    
+void scanCallback (const sensor_msgs::LaserScan::ConstPtr& scan_msg) {
+        if(state != IDLE){
                 float d;
                 float angle_min;
                 float angle_increment;
@@ -175,14 +187,14 @@ void scanCallback (const sensor_msgs::LaserScan::ConstPtr& scan_msg) {
                             printf("close enough to goal pose, going to state LEAVE\n");
                             state=LEAVE;
                         }
-                        if (distToGoal > 1.5){
-                            printf("too far from goal, going to state FAIL\n");
+                        if (gettingFurtherCounter > MAX_FURTHER_COUNT){
+                            printf("getting further away from goal, going to state FAIL\n");
                             state=FAIL;
                         }
                         printf("publishing to cmd_vel: base_cmd.linear.x = %f, base_cmd.angular.z= %f\n", base_cmd.linear.x, base_cmd.angular.z);
                         cmd_vel.publish(base_cmd);
 		}
-//	}
+	}
 }
 
 void actionServerCallback(const move_base_msgs::MoveBaseGoalConstPtr& goal, Server* as)
@@ -213,10 +225,10 @@ int main(int argc, char** argv)
 	ros::NodeHandle n;
 	cmd_vel = n.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
         path_pub=n.advertise<nav_msgs::Path>("/move_base/NavfnROS/plan",1);
-	robot_pose = n.subscribe("/robot_pose", 1000, poseCallback);
+	robot_pose = n.subscribe("/robot_pose", 1, poseCallback);
 	server = new Server(n, "doorPassing", boost::bind(&actionServerCallback, _1, server), false);
 	server->start();
-	scan_sub = n.subscribe("scan", 100, scanCallback);
+	scan_sub = n.subscribe("scan", 1, scanCallback);
 	while (ros::ok()){
 		if (server->isPreemptRequested() && state != IDLE) state = PREEMPTED; 
 		if (state == STOPPING)
