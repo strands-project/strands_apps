@@ -117,7 +117,7 @@ class DoorPass(object):
             print("ACTION SERVER CALLBACK JUST STARTED. GOAL is x=%f, y=%f\n", goalX, goalY); 
             print("GOING TO STATE TURNING\n");
             self.state = 'TURNING';
-            while (self.state == 'TURNING' or self.state == 'DETECT' or self.state == 'PASS'):
+            while (self.state == 'TURNING' or self.state == 'DETECT' or self.state == 'PASS' or self.state == 'DOOR_CLOSED'):
                 while((not self.new_pose_msg) or (not self.new_scan_msg)):
                     rospy.sleep(0.05)
              
