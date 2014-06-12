@@ -134,16 +134,13 @@ add_library(CDoorDetection src/CDoorDetection.cpp)
 #target_link_libraries(ramp_climb ${catkin_LIBRARIES})
 add_executable(door_pass src/door_pass.cpp)
 add_executable(door_detect src/door_detect.cpp)
-add_executable(door_pass2 src/door_pass2.cpp)
 target_link_libraries (door_pass  CDoorDetection)
 target_link_libraries (door_detect  CDoorDetection)
 
 add_dependencies(door_pass ${catkin_EXPORTED_TARGETS})
 add_dependencies(door_detect ${catkin_EXPORTED_TARGETS})
-add_dependencies(door_pass2 ${catkin_EXPORTED_TARGETS})
 
 #target_link_libraries (ramp_climb  CTimer)
 
 target_link_libraries (door_pass  ${catkin_LIBRARIES})
 target_link_libraries (door_detect  ${catkin_LIBRARIES})
-target_link_libraries (door_pass2  ${catkin_LIBRARIES})
