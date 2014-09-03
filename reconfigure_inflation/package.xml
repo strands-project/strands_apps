@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package>
-  <name>scitos_reconfigure_inflation</name>
+  <name>reconfigure_inflation</name>
   <version>0.0.0</version>
-  <description>The scitos reconfigure inflation package</description>
+  <description>The reconfigure inflation package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag --> 
   <!-- Example:  -->
