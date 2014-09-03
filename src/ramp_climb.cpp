@@ -4,7 +4,7 @@
 #include <sensor_msgs/LaserScan.h>
 #include <geometry_msgs/Twist.h>
 #include <move_base_msgs/MoveBaseAction.h>
-#include <scitos_apps_msgs/RampClimbingAction.h>
+#include <scitos_ramp_climb/RampClimbingAction.h>
 #include <actionlib/server/simple_action_server.h>
 
 typedef actionlib::SimpleActionServer<move_base_msgs::MoveBaseAction> Server;
@@ -188,7 +188,7 @@ void scanCallback (const sensor_msgs::LaserScan::ConstPtr& scan_msg)
 void actionServerCallback(const move_base_msgs::MoveBaseGoalConstPtr& goal, Server* as)
 {
 	move_base_msgs::MoveBaseResult result;
-//	scitos_apps_msgs::RampClimbingResult result;
+//	scitos_ramp_climb::RampClimbingResult result;
 	fwSpeed = 0.0;
 	misdetections = 0;
 	minPoints = 25;
