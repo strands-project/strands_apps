@@ -4,7 +4,17 @@ project(scitos_door_pass)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS roscpp rospy std_msgs nav_msgs scitos_msgs strands_navigation_msgs message_generation genmsg actionlib_msgs actionlib)
+find_package(catkin REQUIRED COMPONENTS 
+    roscpp 
+    rospy 
+    std_msgs 
+    nav_msgs 
+    scitos_msgs 
+    message_generation 
+    genmsg 
+    actionlib_msgs 
+    actionlib
+    )
 set ( CMAKE_CXX_FLAGS "-ggdb")
 
 ## System dependencies are found with CMake's conventions
@@ -33,11 +43,18 @@ set ( CMAKE_CXX_FLAGS "-ggdb")
   # Charging.srv
  #)
 
+add_action_files(
+	DIRECTORY action 
+	FILES 
+	DoorCheck.action
+)
+
 ## Generate added messages and services with any dependencies listed here
- #generate_messages(
-	#	 DEPENDENCIES
-		# std_msgs 
-		 #)
+generate_messages(
+    DEPENDENCIES
+    std_msgs 
+    actionlib_msgs
+)
 
 ###################################
 ## catkin specific configuration ##
@@ -137,8 +154,9 @@ add_executable(door_detect src/door_detect.cpp)
 target_link_libraries (door_pass  CDoorDetection)
 target_link_libraries (door_detect  CDoorDetection)
 
-add_dependencies(door_pass ${catkin_EXPORTED_TARGETS})
-add_dependencies(door_detect ${catkin_EXPORTED_TARGETS})
+add_dependencies(CDoorDetection ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
+add_dependencies(door_pass ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
+add_dependencies(door_detect ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 
 #target_link_libraries (ramp_climb  CTimer)
 
