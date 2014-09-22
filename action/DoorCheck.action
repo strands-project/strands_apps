@@ -1,0 +1,8 @@
+#goal definition
+---
+#result definition
+bool open
+float64 width
+---
+#feedback
+string status

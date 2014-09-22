@@ -12,7 +12,6 @@ find_package(catkin REQUIRED COMPONENTS
     roscpp 
     rospy 
     std_msgs 
-    strands_navigation_msgs 
     )
 set ( CMAKE_CXX_FLAGS "-ggdb")
 
@@ -42,11 +41,18 @@ set ( CMAKE_CXX_FLAGS "-ggdb")
   # Charging.srv
  #)
 
+add_action_files(
+	DIRECTORY action 
+	FILES 
+	DoorCheck.action
+)
+
 ## Generate added messages and services with any dependencies listed here
- #generate_messages(
-	#	 DEPENDENCIES
-		# std_msgs 
-		 #)
+generate_messages(
+    DEPENDENCIES
+    std_msgs 
+    actionlib_msgs
+)
 
 ###################################
 ## catkin specific configuration ##
@@ -146,8 +152,9 @@ add_executable(door_detect src/door_detect.cpp)
 target_link_libraries (door_pass  CDoorDetection)
 target_link_libraries (door_detect  CDoorDetection)
 
-add_dependencies(door_pass ${catkin_EXPORTED_TARGETS})
-add_dependencies(door_detect ${catkin_EXPORTED_TARGETS})
+add_dependencies(CDoorDetection ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
+add_dependencies(door_pass ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
+add_dependencies(door_detect ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 
 #target_link_libraries (ramp_climb  CTimer)
 

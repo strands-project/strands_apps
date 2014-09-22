@@ -3,11 +3,11 @@
 #include <vector>
 #include <sensor_msgs/LaserScan.h>
 #include <geometry_msgs/Twist.h>
-#include <strands_navigation_msgs/DoorCheckAction.h>
+#include <scitos_door_pass/DoorCheckAction.h>
 #include <actionlib/server/simple_action_server.h>
 #include "CDoorDetection.h"
 
-typedef actionlib::SimpleActionServer<strands_navigation_msgs::DoorCheckAction> Server;
+typedef actionlib::SimpleActionServer<scitos_door_pass::DoorCheckAction> Server;
 Server *server;
 ros::Subscriber scan_sub;
 
@@ -40,9 +40,9 @@ void scanCallback (const sensor_msgs::LaserScan::ConstPtr& scan_msg)
 	}
 }
 
-void actionServerCallback(const strands_navigation_msgs::DoorCheckGoalConstPtr& goal, Server* as)
+void actionServerCallback(const scitos_door_pass::DoorCheckGoalConstPtr& goal, Server* as)
 {
-	strands_navigation_msgs::DoorCheckResult result;
+	scitos_door_pass::DoorCheckResult result;
 	state = DETECT;
 	measurements = 30;
 	detections = 0;
