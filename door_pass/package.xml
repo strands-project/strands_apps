@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package>
-  <name>scitos_door_pass</name>
+  <name>door_pass</name>
   <version>0.8.0</version>
   <description>Used to navigate through narrow doors</description>
 
