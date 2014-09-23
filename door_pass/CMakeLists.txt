@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(scitos_ramp_climb)
+project(door_pass)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -8,10 +8,12 @@ find_package(catkin REQUIRED COMPONENTS
     actionlib
     actionlib_msgs 
     message_generation 
+    nav_msgs 
     roscpp 
     rospy 
     std_msgs 
     )
+set ( CMAKE_CXX_FLAGS "-ggdb")
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -40,15 +42,16 @@ find_package(catkin REQUIRED COMPONENTS
  #)
 
 add_action_files(
-		DIRECTORY action 
-		FILES RampClimbing.action
+	DIRECTORY action 
+	FILES 
+	DoorCheck.action
 )
 
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
-  DEPENDENCIES
-  std_msgs
-  actionlib_msgs
+    DEPENDENCIES
+    std_msgs 
+    actionlib_msgs
 )
 
 ###################################
@@ -141,15 +144,19 @@ include_directories(include
 # catkin_add_nosetests(test)
 
 #add_library(CDump src/CDump.cpp)
-#add_library(CTimer src/CTimer.cpp)
+add_library(CDoorDetection src/CDoorDetection.cpp)
 
 #target_link_libraries(ramp_climb ${catkin_LIBRARIES})
-add_executable(ramp_climb src/ramp_climb.cpp)
+add_executable(door_pass src/door_pass.cpp)
+add_executable(door_detect src/door_detect.cpp)
+target_link_libraries (door_pass  CDoorDetection)
+target_link_libraries (door_detect  CDoorDetection)
 
-# nah: not sure which one to keep, so maybe both...
-add_dependencies(ramp_climb ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
+add_dependencies(CDoorDetection ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
+add_dependencies(door_pass ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
+add_dependencies(door_detect ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 
-#target_link_libraries (ramp_climb  CDump)
 #target_link_libraries (ramp_climb  CTimer)
 
-target_link_libraries (ramp_climb  ${catkin_LIBRARIES})
+target_link_libraries (door_pass  ${catkin_LIBRARIES})
+target_link_libraries (door_detect  ${catkin_LIBRARIES})

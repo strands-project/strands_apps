@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package>
-  <name>scitos_ramp_climb</name>
+  <name>ramp_climb</name>
   <version>0.8.0</version>
   <description>Used to navigate through narrow corridors</description>
 
