@@ -5,7 +5,7 @@
 #include <geometry_msgs/Twist.h>
 #include <door_pass/DoorCheckAction.h>
 #include <actionlib/server/simple_action_server.h>
-#include "CDoorDetection.h"
+#include "door_pass/CDoorDetection.h"
 
 typedef actionlib::SimpleActionServer<door_pass::DoorCheckAction> Server;
 Server *server;

@@ -6,7 +6,7 @@
 #include <geometry_msgs/Twist.h>
 #include <move_base_msgs/MoveBaseAction.h>
 #include <actionlib/server/simple_action_server.h>
-#include "CDoorDetection.h"
+#include "door_pass/CDoorDetection.h"
 
 typedef actionlib::SimpleActionServer<move_base_msgs::MoveBaseAction> Server;
 Server *server;
