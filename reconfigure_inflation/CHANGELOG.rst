@@ -2,8 +2,8 @@
 Changelog for package reconfigure_inflation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.0.1 (2014-09-23)
+------------------
 * Added license files
 * Wrong URL
 * [reconfigure_inflation] Preparing cmake and package file for release
