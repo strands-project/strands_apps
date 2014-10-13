@@ -193,12 +193,14 @@ void actionServerCallback(const move_base_msgs::MoveBaseGoalConstPtr& goal, Serv
 	misdetections = 0;
 	minPoints = 25;
 	state = TURNING;
+	goalX = goal->target_pose.pose.position.x;
+	goalY = goal->target_pose.pose.position.y;
 	if (goalX == 0 && goalY == 0) state = PROGRESS;
 	while (state == TURNING || state == PROGRESS || state == FINAL){
 		if (misdetections > 20){
 			if (state == FINAL) state = SUCCESS; else state = FAIL;
 		}
-		usleep(20000);
+		usleep(15000);
 	}
 	if (state == SUCCESS) server->setSucceeded(result);
 	if (state == FAIL) server->setAborted(result);
