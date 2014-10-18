@@ -4,6 +4,12 @@ Changelog for package pose_extractor
 
 Forthcoming
 -----------
+* Adjusted version to match the version number of the other packages.
+* Created changelog
+* Prepared for release
+* Recreated directory
+* Contributors: Christian Dondrup
+
 * Prepared for release
 * Recreated directory
 * Contributors: Christian Dondrup
