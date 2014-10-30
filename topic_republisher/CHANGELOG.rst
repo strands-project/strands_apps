@@ -2,8 +2,8 @@
 Changelog for package topic_republisher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.0.4 (2014-10-30)
+------------------
 * Adjusted version number to match the others
 * Created changelog
 * Creating install targets and fixing dependencies.
