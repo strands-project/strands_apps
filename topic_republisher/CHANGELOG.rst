@@ -4,6 +4,12 @@ Changelog for package topic_republisher
 
 Forthcoming
 -----------
+* Adjusted version number to match the others
+* Created changelog
+* Creating install targets and fixing dependencies.
+* Recreated directory
+* Contributors: Christian Dondrup
+
 * Creating install targets and fixing dependencies.
 * Recreated directory
 * Contributors: Christian Dondrup
