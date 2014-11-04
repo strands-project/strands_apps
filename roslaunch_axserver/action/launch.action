@@ -1,0 +1,8 @@
+# the time to wait until
+string pkg
+string launch_file
+string[] monitored_topics
+---
+---
+# feedback message
+bool ready
