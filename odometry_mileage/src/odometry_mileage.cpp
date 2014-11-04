@@ -67,12 +67,16 @@ void callback(const nav_msgs::Odometry::ConstPtr &odom)
     save++;
 }
 
-void updateMileage(ros::NodeHandle &n) {
-    ros::Subscriber sub = n.subscribe("/mileage", 1, &updateMileageCallback);
-    while(!isUpdated()) {
+void updateMileage(ros::NodeHandle &n, double timeout, std::string mileage_topic) {
+    ROS_INFO("Waiting for mileage update from: %s", mileage_topic.c_str());
+    ros::Subscriber sub = n.subscribe(mileage_topic, 1, &updateMileageCallback);
+    ros::Time end;
+    end.fromSec(ros::Time::now().toSec() + timeout);
+    while(!isUpdated() && ros::Time::now() < end) {
         ros::spinOnce();
     }
     sub.shutdown();
+    ROS_INFO("%s", isUpdated() ? "Updated from topic" : "Timed out");
 }
 
 int main(int argc, char **argv)
@@ -90,17 +94,21 @@ int main(int argc, char **argv)
 
     // Declare variables that can be modified by launch file or command line.
     std::string mileage_topic;
+    std::string update_mileage_topic;
     std::string odom_topic;
+    double timeout;
 
     // Initialize node parameters from launch file or command line.
     // Use a private node handle so that multiple instances of the node can be run simultaneously
     // while using different parameters.
     ros::NodeHandle private_node_handle_("~");
     private_node_handle_.param("mileage_topic", mileage_topic, std::string("/odom_mileage"));
+    private_node_handle_.param("initial_mileage_topic", update_mileage_topic, std::string("/mileage"));
     private_node_handle_.param("odom_topic", odom_topic, std::string("/odom"));
     private_node_handle_.param("save_interval", save_interval, 500);
+    private_node_handle_.param("init_update_timeout", timeout, 10.0);
     n.param("/saved_mileage", total_distance, 0.0);
-    updateMileage(n);
+    updateMileage(n, timeout, update_mileage_topic);
 
     client = n.serviceClient<mongodb_store::SetParam>("/config_manager/save_param");
 
