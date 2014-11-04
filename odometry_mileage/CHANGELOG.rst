@@ -2,8 +2,8 @@
 Changelog for package odometry_mileage
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.0.5 (2014-11-04)
+------------------
 * [odometry_mileage] making it robot independent and prepared for release
   * Added timeout if there is no mileage topic to read the initial value from.
   * configurable via parameter
