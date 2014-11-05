@@ -1,0 +1,10 @@
+<launch>
+  
+  <node name="roslaunch_axserver" pkg="roslaunch_axserver" type="roslaunch_server.py" output="screen"/>
+
+  <!-- rosout and diagnostic topic logger -->
+  <!-- <node name="diagnostics_logger" pkg="strands_diagnostics" type="logger" output="screen"/> -->
+  
+  <test test-name="roslaunch_axserver_tester" pkg="roslaunch_axserver" type="test_launcher_node.py" />
+
+</launch>
