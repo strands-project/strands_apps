@@ -34,7 +34,7 @@ import actionlib
     client.wait_for_server()
 
     # Creates a goal to send to the action server.
-    goal = roslaunch_axserver.msg.launchActionGoal(pkg='pkg', launch_file='filename', monitored_topics=[])
+    goal = roslaunch_axserver.msg.launchGoal(pkg='pkg', launch_file='filename', monitored_topics=[])
 
     # Sends the goal to the action server.
     client.send_goal(goal)
