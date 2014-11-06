@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>roslaunch_axserver</name>
-  <version>0.0.6</version>
+  <version>0.0.7</version>
   <description>launch other ROS launch files via an actionlib interface</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag --> 
