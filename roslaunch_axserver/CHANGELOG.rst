@@ -2,8 +2,8 @@
 Changelog for package roslaunch_axserver
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.0.6 (2014-11-06)
+------------------
 * added license and bumped version
 * added test and install targets
 * Add 'roslaunch_axserver/' from commit '769ad1b36aba0562dbc948d122095dd7d44a291e'
