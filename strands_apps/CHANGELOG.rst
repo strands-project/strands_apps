@@ -1,9 +1,14 @@
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Changelog for package door_pass
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Changelog for package strands_apps
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 0.0.7 (2014-11-06)
 ------------------
+* Created metapackage for easier install
+* Contributors: Christian Dondrup
+
+* Created metapackage for easier install
+* Contributors: Christian Dondrup
 
 0.0.6 (2014-11-06)
 ------------------
@@ -22,7 +27,3 @@ Changelog for package door_pass
 
 0.0.1 (2014-09-23)
 ------------------
-* Added license files
-* [door_pass] preparing cmake and package file for release
-* Removed scitos prefix for door_pass and ramp_climb
-* Contributors: Christian Dondrup
