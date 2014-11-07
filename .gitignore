@@ -22,3 +22,6 @@
 
 # Python
 *.pyc
+
+#Others
+*~

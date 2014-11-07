@@ -1,8 +1,9 @@
 <launch>
-	<arg name="machine" default="localhost" />
-	<arg name="user" default="" />
+  <arg name="machine" default="localhost" />
+  <arg name="user" default="" />
 
-	<machine name="$(arg machine)" address="$(arg machine)" env-loader="/opt/strands/strands_catkin_ws/devel/env.sh" user="$(arg user)" default="true"/>
+  <!-- now has an IF checking for the arg "remote" -->
+  <machine name="$(arg machine)" address="$(arg machine)" env-loader="$(env ROS_ENV_LOADER)" user="$(arg user)" default="true" />
 
 
 	<node pkg="door_pass" type="door_pass" name="door_pass_node" output="screen" >
