@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>reconfigure_inflation</name>
-  <version>0.0.7</version>
+  <version>0.0.8</version>
   <description>The reconfigure inflation package</description>
 
   <maintainer email="nilsbore@gmail.com">Nils Bore</maintainer>
