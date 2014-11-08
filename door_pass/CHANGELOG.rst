@@ -2,6 +2,12 @@
 Changelog for package door_pass
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* final and tested version of loader
+* new machine tags
+* Contributors: Jaime Pulido Fentanes
+
 0.0.7 (2014-11-06)
 ------------------
 

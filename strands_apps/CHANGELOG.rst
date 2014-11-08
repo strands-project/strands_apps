@@ -2,6 +2,9 @@
 Changelog for package strands_apps
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.0.7 (2014-11-06)
 ------------------
 * Created metapackage for easier install
