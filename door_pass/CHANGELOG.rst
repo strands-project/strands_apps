@@ -2,6 +2,9 @@
 Changelog for package door_pass
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.0.8 (2014-11-08)
 ------------------
 * final and tested version of loader

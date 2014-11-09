@@ -2,6 +2,9 @@
 Changelog for package roslaunch_axserver
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.0.8 (2014-11-08)
 ------------------
 
