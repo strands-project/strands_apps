@@ -2,8 +2,8 @@
 Changelog for package marathon_reporter
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.0.10 (2014-11-18)
+-------------------
 * Adjusting version number
 * Use hashlib not deprecated md5 lib
 * Changed report period to 5 minutes
