@@ -7,7 +7,7 @@ from marathon_reporter.msg import MarathonSession
 
 import requests
 import sys
-import md5
+import hashlib
 import yaml
 import os
 import threading
@@ -20,7 +20,7 @@ class MarathonReporter(object):
     def __init__(self):
         rospy.init_node("strands_marathon_reporter", anonymous=False)
         self._load_user_details()
-        self._team_hash =  md5.new(self._team_name).hexdigest()
+        self._team_hash =  hashlib.md5(self._team_name).hexdigest()
         self._msg_store =  message_store.MessageStoreProxy(collection="marathon2014")
         
         # Get the initial odometry pose
@@ -69,7 +69,7 @@ class MarathonReporter(object):
         
     def _web_get(self, session_id, distance=None, duration=0, end=0):
         hash_string = requests.get(BASE_URL+self._team_hash).text.strip()
-        auth =  md5.new(hash_string + self._passkey).hexdigest()
+        auth =  hashlib.md5(hash_string + self._passkey).hexdigest()
         params = {'id': self._team_name,
                   'auth': auth,
                   'runid': session_id,
