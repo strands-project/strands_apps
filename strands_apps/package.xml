@@ -21,6 +21,7 @@
   <run_depend>roslaunch_axserver</run_depend>
   <run_depend>state_checker</run_depend>
   <run_depend>topic_republisher</run_depend>
+  <run_depend>marathon_reporter</run_depend>
 
   <export>
     <metapackage/> 
