@@ -22,22 +22,35 @@ class MarathonReporter(object):
         self._load_user_details()
         self._team_hash =  md5.new(self._team_name).hexdigest()
         self._msg_store =  message_store.MessageStoreProxy(collection="marathon2014")
+        
+        # Get the initial odometry pose
+        rospy.loginfo("Waiting for robot odometry...")
+        try:
+            self._last_point = rospy.wait_for_message("/odom", Odometry, 10).pose.pose.position
+        except:
+            rospy.logerr("Can't get an odometry message. Please make sure your robot is "
+                         "publishing standard nav_msgs/Odometry messages on the /odom topic." )
+            rospy.logfatal("!!! !!! THIS RUN WILL NOT BE COUNTED !!! !!!")
+            sys.exit(1)
+
+        # Initialise a new session
+        rospy.loginfo("Starting a new marathon session.")
         try:
             self._initialise_session()
-        except requests.ConnectionError,  e:
+        except (requests.ConnectionError, requests.exceptions.MissingSchema),  e:
             rospy.logerr("Connection error. Internet must be available at startup"
                          " even if it is only available intermitently during run."
                          " Terminating reporting, this run will not be counted!.")
+            rospy.logerr("Python requests message: %s" % str(e))
             rospy.logfatal("!!! !!! THIS RUN WILL NOT BE COUNTED !!! !!!")
             sys.exit(1)
-        #self._last_point = rospy.wait_for_message("/odom", Odometry, 10)
         self._odom_sub =  rospy.Subscriber("/odom", Odometry,
                                            self._odometry_cb)
         
         rospy.on_shutdown(self._shutdown_cb)
         
         self._reporting = True
-        self._timout =  threading.Timer(TIME_INTERVAL, self.report_session)
+        self._timout =  threading.Timer(1, self.report_session)
         self._timout.start()
         
     def _load_user_details(self):
@@ -51,6 +64,7 @@ class MarathonReporter(object):
             rospy.logerr("Error reading credentials file ~/.marathon_auth\n"
                          "Please check the file contains your user details "
                          "and is readable")
+            rospy.logfatal("!!! !!! THIS RUN WILL NOT BE COUNTED !!! !!!")
             sys.exit(1)
         
     def _web_get(self, session_id, distance=None, duration=0, end=0):
@@ -70,6 +84,7 @@ class MarathonReporter(object):
                 rospy.logerr("Username/password incorrect. Please verify your"
                              " setup. Your username and password should be "
                              "set in ~/.marathon_auth")
+            rospy.logfatal("!!! !!! THIS RUN WILL NOT BE COUNTED !!! !!!")
             sys.exit(1)
         else:
             return request.text.strip()
@@ -109,8 +124,7 @@ class MarathonReporter(object):
                       self._current_session.name)
         
     def report_session(self):
-        self._current_session.duration =  rospy.Time.now() -  self._local_start_time
-        rospy.loginfo("Reporting session duration of %d, distance of %d" %
+        rospy.loginfo("Reporting session duration of %ds, distance of %dm" %
                       (self._current_session.duration.to_sec(),
                        self._current_session.distance))
         try:
@@ -145,7 +159,7 @@ class MarathonReporter(object):
         rospy.loginfo("Run completed. Distance travelled=%fm. Duration=%d seconds" %
                       (self._current_session.distance,
                        self._current_session.duration.to_sec()))
-        rospy.loginfo("Shutdown!  marking end and submitting")
+        rospy.loginfo("Shutdown!  marking end and submitting...")
         try:
             # The session is a dangler, end it and let the web know
             end = self._web_get(self._current_session.name,
@@ -156,6 +170,7 @@ class MarathonReporter(object):
                 self._current_session.ended = True
                 self._msg_store.update(self._current_session,
                                        message_query={'name': self._current_session.name,})
+                rospy.sleep(2) # would be nicer to know message store had finished clean..
             else:
                 rospy.logwarn("Could not mark sesion ended on web, response=%s"%end)
         except requests.ConnectionError,  e:
