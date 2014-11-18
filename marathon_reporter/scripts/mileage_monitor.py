@@ -14,7 +14,7 @@ import threading
 
 BASE_URL = "http://www.cs.bham.ac.uk/~burbrcjc/marathon2014/"
 REPORT_URL =  BASE_URL + "report.php"
-TIME_INTERVAL = 20
+TIME_INTERVAL = 5 * 60
 
 class MarathonReporter(object):
     def __init__(self):
