@@ -121,7 +121,7 @@ class MarathonReporter(object):
             rospy.loginfo("New marathon session started, id=%s." %
                           self._current_session.name)
         except rospy.ServiceException, e:
-            rospy.logerror("Problem calling mongodb_store services. mongodb_store is required "
+            rospy.logerr("Problem calling mongodb_store services. mongodb_store is required "
                            "by the marathon reporter.")
             self._die()
 
