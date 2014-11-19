@@ -6,9 +6,8 @@ from math  import sqrt
 from marathon_reporter.msg import MarathonSession
 
 import requests
-REQUESTS_ECEPTIONS = tuple([requests.exceptions.__getattribute__(i) 
+REQUESTS_EXCEPTIONS = tuple([requests.exceptions.__getattribute__(i) 
                      for i in dir(requests.exceptions) if not i.startswith("_")])
-print REQUESTS_ECEPTIONS
 import sys
 import hashlib
 import yaml
