@@ -33,6 +33,8 @@ class MarathonReporter(object):
             rospy.logfatal("!!! !!! THIS RUN WILL NOT BE COUNTED !!! !!!")
             sys.exit(1)
 
+        self._session_pub = rospy.Publisher("/current_marathon_session", MarathonSession)
+
         # Initialise a new session
         rospy.loginfo("Starting a new marathon session.")
         try:
@@ -147,6 +149,9 @@ class MarathonReporter(object):
             return
         self._current_session.distance += distance
         self._current_session.duration =  odom.header.stamp -  self._local_start_time
+
+        # Publish current session details at odometry frequency
+        self._session_pub.publish(self._current_session)
         
         # Update mongodb stored session
         self._msg_store.update(self._current_session,
