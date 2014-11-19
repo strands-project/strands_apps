@@ -1,0 +1,10 @@
+#goal definition
+string subject
+string to_address
+string text
+---
+#result definition
+bool success
+---
+#feedback
+string senttext
