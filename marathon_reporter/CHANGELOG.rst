@@ -2,6 +2,16 @@
 Changelog for package marathon_reporter
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Check all requests exceptions and rospy service exception
+* Fix error reporting function call.
+* Remove messy debug output.
+* Fix variable name error
+* Check all requests exceptions and rospy service exception
+* Add publishing of marathon run status to /current_marathon_session
+* Contributors: Chris Burbridge
+
 0.0.10 (2014-11-18)
 -------------------
 * Adjusting version number
