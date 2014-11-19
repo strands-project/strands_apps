@@ -57,7 +57,6 @@ class MarathonReporter(object):
         try:
             with open(os.path.expanduser("~/.marathon_auth"), "r") as f:
                 creds = yaml.load(f.read())
-            print creds
             self._team_name = creds["team"]
             self._passkey = creds["password"]
         except:
