@@ -2,6 +2,9 @@
 Changelog for package marathon_reporter
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.1.0 (2014-11-19)
 ------------------
 * Check all requests exceptions and rospy service exception
