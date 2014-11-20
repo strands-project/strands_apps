@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>ramp_climb</name>
-  <version>0.1.0</version>
+  <version>0.1.1</version>
   <description>Used to navigate through narrow corridors</description>
 
   <maintainer email="tkrajnik@lincoln.ac.uk">gestom</maintainer>

@@ -2,8 +2,8 @@
 Changelog for package strands_emails
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.1 (2014-11-20)
+------------------
 * version numbers all the same now
 * making strands_email less linda specific
 * adding strands_emails
