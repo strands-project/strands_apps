@@ -2,8 +2,8 @@
 Changelog for package strands_emails
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.2 (2014-11-20)
+------------------
 * fixing dir name
 * Contributors: Jaime Pulido Fentanes
 
