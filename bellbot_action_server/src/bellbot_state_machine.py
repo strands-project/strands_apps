@@ -14,8 +14,8 @@ from actionlib_msgs.msg import *
 from std_msgs.msg import String
 import topological_navigation.msg
 
-
-from bellbot_action_server.srv import * 
+from bellbot_action_server.srv import *
+from bellbot_action_server.msg import * 
 
 class BellbotStateMachine(Agent):
 
@@ -27,6 +27,7 @@ class BellbotStateMachine(Agent):
 
         # the super().__init__() methods calls make_sm(),
         super(BellbotStateMachine,self).__init__()
+
        
     
     def make_sm(self):
@@ -73,24 +74,9 @@ class BellbotStateMachine(Agent):
         rospy.loginfo('Getting parameters from server')
 
         self.sm.userdata.goal  = goal 
-
         
     def get_sm_userdata(self):
         return self.sm.userdata
-
-
-class ServiceHandler(object):
-    """
-    Class to handle service requests
-    """
-    def __init__(self):
-        rospy.loginfo("Init ServiceHandler")
-        self.service = rospy.Service('/bellbot_confirmation', String, self.service_cb)
-        self._got_confirmation = False
-    
-    def service_cb(self, request):
-        pass
-
 
 class StatePublisher(object):
     """
@@ -99,7 +85,7 @@ class StatePublisher(object):
 
     def __init__(self):
         rospy.loginfo("Running the init!")
-        self.state_publisher = rospy.Publisher('/bellbot_state', String, latch=True)
+        self.state_publisher = rospy.Publisher('/bellbot_state', BellbotState, latch=True)
         
     def publish(self, state):
         self.state_publisher.publish(state)
@@ -115,7 +101,7 @@ class Setup(smach.State, StatePublisher):
 
     def __init__(self):
         smach.State.__init__(self,
-                           outcomes=['succeeded', 'aborted', 'preempted'],
+                           outcomes=['succeeded_mode1','succeeded_mode2','succeeded_mode3', 'aborted', 'preempted'],
                            input_keys=['goal'],
                            output_keys=[])
 
@@ -125,9 +111,7 @@ class Setup(smach.State, StatePublisher):
         self.client = actionlib.SimpleActionClient('topological_navigation', topological_navigation.msg.GotoNodeAction)
         
         self.client.wait_for_server()
-        
         StatePublisher.__init__(self)
-
         rospy.loginfo(" Setup ... Init done")
         
     def _on_node_shutdown(self):
@@ -135,7 +119,7 @@ class Setup(smach.State, StatePublisher):
 
     def execute(self, userdata):
         rospy.loginfo('Executing state %s', self.__class__.__name__)
-        self.publish(self.__class__.__name__)
+        self.publish(BellbotState(name=self.__class__.__name__))
         navgoal = topological_navigation.msg.GotoNodeGoal()
         
         rospy.loginfo("Requesting Navigation to %s", userdata.goal.starting_waypoint_name)
@@ -158,7 +142,6 @@ class Setup(smach.State, StatePublisher):
         # Check if the naviation was successful 
         status = self.client.get_state()
         if status == GoalStatus.SUCCEEDED:
-            return 'succeeded_mode1'
             mode = userdata.goal.mode
             if mode == 1:
                 return 'succeeded_mode1'
@@ -182,17 +165,28 @@ class WaitingForGoal(smach.State, StatePublisher):
                            output_keys=['target'])
 
         StatePublisher.__init__(self)
-        
-        #Create a service in order to wait for targets coming from the GUI. 
-        self.service = rospy.Service('/bellbot_new_target', NewTarget, self.service_cb)
+
+        service_name = '/bellbot_new_target'
+        try:
+            rospy.wait_for_service(service_name, timeout=1)
+        except:
+            rospy.loginfo('Setting up service: %s', service_name )
+            self.service = rospy.Service(service_name, NewTarget, self.service_cb)
+            rospy.loginfo('Service running: %s', service_name )
+
+        self._got_request = False
         self._target = None
-    
+
+        
     def service_cb(self, request):
+        self._got_request = True
         self._target = request.target
 
     def execute(self, userdata):
         rospy.loginfo('Executing state %s', self.__class__.__name__)
-        self.publish(self.__class__.__name__)
+        state = BellbotState()
+        state.name = self.__class__.__name__
+        self.publish(state)
         
         #Here we wait until a target arived. 
         while self._target == None:
@@ -204,6 +198,7 @@ class WaitingForGoal(smach.State, StatePublisher):
 
         userdata.target = self._target
         self._target = None
+        self._got_request = True
 
         return 'succeeded' 
 
@@ -218,22 +213,31 @@ class WaitingForMultipleGuests(smach.State, StatePublisher):
                            outcomes=['succeeded', 'aborted', 'preempted'],
                            input_keys=['goal'],
                            output_keys=['target'])
-
-        StatePublisher.__init__(self)
         
-        #Create a service in order to wait for targets coming from the GUI. 
-        self.service = rospy.Service('/bellbot_confirm_goal', Empty, self.service_cb)
-        self._got_confirmation = False
-    
-    def service_cb(self, request):
-        self._got_confirmation = True
+        service_name = '/bellbot_accept_target_mult'
+        try:
+            rospy.wait_for_service(service_name, timeout=1)
+        except:
+            rospy.loginfo('Setting up service: %s', service_name )
+            self.service = rospy.Service(service_name, NewTarget, self.service_cb)
+            rospy.loginfo('Service running: %s', service_name )
 
+        self._got_request = False
+        StatePublisher.__init__(self)
+
+    def service_cb(self, request):
+        self._got_request = True
+        
     def execute(self, userdata):
         rospy.loginfo('Executing state %s', self.__class__.__name__)
-        self.publish(self.__class__.__name__)
+        state = BellbotState()
+        state.name = self.__class__.__name__
+        state.goal = userdata.goal.preselected_goal
+        state.text = userdata.goal.text
+        self.publish(state)
         
         #Here we wait until a target arived. 
-        while self._got_confirmation == False:
+        while self._got_request == False:
             if self.preempt_requested():
                 self.service_preempt()
                 return 'preempted'
@@ -241,7 +245,7 @@ class WaitingForMultipleGuests(smach.State, StatePublisher):
                 rospy.sleep(rospy.Duration.from_sec(0.01))
 
         userdata.target = userdata.goal.preselected_goal
-        self._got_confirmation = False
+        self._got_request = False
 
         return 'succeeded'
 
@@ -257,21 +261,30 @@ class WaitingForSingleGuest(smach.State, StatePublisher):
                            input_keys=['goal'],
                            output_keys=['target'])
 
+        service_name = '/bellbot_accept_target_single'
+        try:
+            rospy.wait_for_service(service_name, timeout=1)
+        except:
+            rospy.loginfo('Setting up service: %s', service_name )
+            self.service = rospy.Service(service_name, NewTarget, self.service_cb)
+            rospy.loginfo('Service running: %s', service_name )
+
+        self._got_request = False
         StatePublisher.__init__(self)
-        
-        #Create a service in order to wait for targets coming from the GUI. 
-        self.service = rospy.Service('/bellbot_confirm_single_goal', Empty, self.service_cb)
-        self._got_confirmation = False
-    
+
     def service_cb(self, request):
-        self._got_confirmation = True
+        self._got_request = True
 
     def execute(self, userdata):
         rospy.loginfo('Executing state %s', self.__class__.__name__)
-        self.publish(self.__class__.__name__)
+        state = BellbotState()
+        state.name = self.__class__.__name__
+        state.goal = userdata.goal.preselected_goal
+        state.text = userdata.goal.text
+        self.publish(state)
         
         #Here we wait until a target arived. 
-        while self._got_confirmation == False:
+        while self._got_request == False:
             if self.preempt_requested():
                 self.service_preempt()
                 return 'preempted'
@@ -279,7 +292,7 @@ class WaitingForSingleGuest(smach.State, StatePublisher):
                 rospy.sleep(rospy.Duration.from_sec(0.01))
 
         userdata.target = userdata.goal.preselected_goal
-        self._got_confirmation = False
+        self._got_request = False
 
         return 'succeeded' 
 
@@ -310,7 +323,7 @@ class Guiding(smach.State, StatePublisher):
 
     def execute(self, userdata):
         rospy.loginfo('Executing state %s', self.__class__.__name__)
-        self.publish(self.__class__.__name__)
+        self.publish(BellbotState(name=self.__class__.__name__))
         navgoal = topological_navigation.msg.GotoNodeGoal()
         
         rospy.loginfo("Requesting Navigation to %s", userdata.target)
@@ -363,7 +376,7 @@ class WaitingForFeedback(smach.State, StatePublisher):
 
     def execute(self, userdata):
         rospy.loginfo('Executing state %s', self.__class__.__name__)
-        self.publish(self.__class__.__name__)
+        self.publish(BellbotState(name=self.__class__.__name__))
         
         self._endtime = rospy.get_time() + self._feedback_max_time
         #rospy.loginfo('start time: %s', rospy.get_time())
