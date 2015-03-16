@@ -2,6 +2,9 @@
 Changelog for package reconfigure_inflation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.1.2 (2014-11-20)
 ------------------
 
