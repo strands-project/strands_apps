@@ -2,8 +2,8 @@
 Changelog for package topic_republisher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.3 (2015-03-16)
+------------------
 * workaround for issue wrt morse odom topic and dwa planner (set y value to 0.0)
 * fix issue with ptu server and morse topic by correcting and republishing /ptu/state
 * Contributors: Lars Kunze
