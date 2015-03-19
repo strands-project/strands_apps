@@ -21,5 +21,7 @@ catkin_package(
 install(PROGRAMS
   scripts/republish_ptu_jointstate.py
   scripts/republish_robot_pose.py
+  scripts/republish_ptu_state.py
+  scripts/republish_odometry.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
