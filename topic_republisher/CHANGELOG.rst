@@ -2,8 +2,8 @@
 Changelog for package topic_republisher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.4 (2015-03-19)
+------------------
 * add install targets
 * Contributors: Bruno Lacerda
 
