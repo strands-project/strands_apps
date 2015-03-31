@@ -2,6 +2,8 @@
 string pkg
 string launch_file
 string[] monitored_topics
+string[] parameters
+string[] values
 ---
 ---
 # feedback message
