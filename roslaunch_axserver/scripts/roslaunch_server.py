@@ -69,7 +69,7 @@ class RoslaunchServer(object):
         rospy.loginfo('trigger roslaunch goal ' + gh.get_goal_id().id)
         goal = gh.get_goal()
         command = "exec roslaunch " + goal.pkg + " " + goal.launch_file
-        command+="".join([" "+x+":="+y for (x,y) in zip(goal.parameters,goal.values)])
+        command+="".join([" "+x+":="+y for (x,y) in zip(map(str.strip,goal.parameters),map(str.strip,goal.values))])
         try:
             self.p[gh.get_goal_id()] = subprocess.Popen(
                 command, stdin=subprocess.PIPE, shell=True)
