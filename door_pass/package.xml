@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>door_pass</name>
-  <version>0.1.4</version>
+  <version>0.1.5</version>
   <description>Used to navigate through narrow doors</description>
 
   <maintainer email="tkrajnik@lincoln.ac.uk">gestom</maintainer>

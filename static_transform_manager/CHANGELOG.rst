@@ -2,8 +2,8 @@
 Changelog for package static_transform_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.5 (2015-03-31)
+------------------
 * homogenised version numbers
 * New static_transform_manager package.
 * Contributors: Chris Burbridge, Marc Hanheide
