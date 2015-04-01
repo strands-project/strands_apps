@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import rospy
 import tf
-from ptu_follow_frame.srv import ( SetTransformation, SetTransformationResponse, 
+from static_transform_manager.srv import ( SetTransformation, SetTransformationResponse, 
                                    StopTransformation, StopTransformationResponse
                                    )
 
