@@ -19,6 +19,8 @@ find_package(catkin REQUIRED COMPONENTS
     )
 set ( CMAKE_CXX_FLAGS "-ggdb")
 
+catkin_python_setup()
+
 #######################################
 ## Declare ROS messages and services ##
 #######################################
@@ -66,7 +68,7 @@ target_link_libraries (door_detect  ${catkin_LIBRARIES})
 #############
 
  install(PROGRAMS
-   scripts/door_pass.py
+   scripts/door_passing.py
    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
  )
 
