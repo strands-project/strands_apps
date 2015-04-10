@@ -142,7 +142,9 @@ class DoorUtils(object):
                 rospy.loginfo("Close enough to goal pose, door pass success.")
                 base_cmd.angular.z =0.0
                 base_cmd.linear.x = 0.0
-                self.publish_cmd(base_cmd)
+                # doing it once wasn't doing much
+                for i in range(5):
+                    self.publish_cmd(base_cmd)
                 return True
             if (prev_dist_to_goal < dist_to_goal):
                 getting_further_counter=getting_further_counter+1
