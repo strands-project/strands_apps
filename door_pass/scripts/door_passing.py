@@ -4,19 +4,34 @@ import rospy
 import actionlib
 from move_base_msgs.msg import MoveBaseAction
 from door_pass.door_utils import DoorUtils
+import dynamic_reconfigure.client
+
 
 class DoorPass(object):
 
     def __init__(self):
-        default_speed=rospy.get_param("~/default_speed", 0.15)
-        base_radius=rospy.get_param("~/base_radius", 0.31)
-        getting_further_counter_threshold=rospy.get_param("~/getting_further_counter_threshold", 5)
-        distance_to_success=rospy.get_param("~/distance_to_success", 0.2)
-        self.door_utils=DoorUtils(default_speed=default_speed, base_radius=base_radius, getting_further_counter_threshold=getting_further_counter_threshold, distance_to_success=distance_to_success)
         self.door_as=actionlib.SimpleActionServer('doorPassing', MoveBaseAction, execute_cb = self.execute_cb, auto_start=False) 
         self.door_as.start()
 
     def execute_cb(self, goal):
+
+
+        default_speed=rospy.get_param("~/default_speed", 0.15)
+        base_radius=rospy.get_param("~/base_radius", 0.31)
+        getting_further_counter_threshold=rospy.get_param("~/getting_further_counter_threshold", 5)
+        distance_to_success=rospy.get_param("~/distance_to_success", 0.2)
+
+        # read speed limits frmo move base
+        client = dynamic_reconfigure.client.Client('/move_base/DWAPlannerROS', timeout=5)
+        config = client.get_configuration(timeout=5)
+
+        # these are taken from the current strands movebase config
+        if config is None:
+            config = {'min_vel_x': 0.0, 'min_vel_y': 0.0,  'min_rot_vel': 0.4, 'acc_lim_x': 1.0, 'acc_lim_y': 0.0, 'acc_lim_theta': 3.2, 'max_rot_vel': 1.0, 'max_vel_x': 0.55, 'max_vel_y': 0.0}
+
+        self.door_utils=DoorUtils(default_speed=default_speed, base_radius=base_radius, getting_further_counter_threshold=getting_further_counter_threshold, distance_to_success=distance_to_success, move_base_cfg=config)
+        
+
         if self.door_as.is_preempt_requested():
             self.door_as.set_preempted()
             return

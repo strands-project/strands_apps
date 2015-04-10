@@ -5,12 +5,12 @@
   <description>Used to navigate through narrow doors</description>
 
   <maintainer email="tkrajnik@lincoln.ac.uk">gestom</maintainer>
+  <maintainer email="b.lacerda@cs.bham.ac.uk">Bruno Lacerda</maintainer>
+  <maintainer email="n.a.hawes@cs.bham.ac.uk">Nick Hawes</maintainer>
 
   <license>MIT</license>
 
   <url type="website">https://github.com/strands-project/strands_apps</url>
-
-  <author email="tkrajnik@lincoln.ac.uk">gestom</author> -->
 
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>actionlib</build_depend>
@@ -24,6 +24,7 @@
   <build_depend>sensor_msgs</build_depend>
   <build_depend>std_msgs</build_depend>
   <build_depend>tf</build_depend>
+  <build_depend>dynamic_reconfigure</build_depend>
   
   <run_depend>actionlib</run_depend>
   <run_depend>actionlib_msgs</run_depend>
@@ -36,6 +37,7 @@
   <run_depend>sensor_msgs</run_depend>
   <run_depend>std_msgs</run_depend>
   <run_depend>tf</run_depend>
+  <run_depend>dynamic_reconfigure</run_depend>
 
   <export/>
 </package>

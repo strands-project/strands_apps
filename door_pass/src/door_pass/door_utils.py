@@ -7,13 +7,20 @@ from sensor_msgs.msg import LaserScan
 from geometry_msgs.msg import Twist, Pose
 from nav_msgs.msg import Path
 
+def clamp(value, lower, upper):
+    return min(max(lower, value), upper)
+
+
 class DoorUtils(object):
-    def __init__(self, default_speed, base_radius, getting_further_counter_threshold, distance_to_success):
+    def __init__(self, default_speed, base_radius, getting_further_counter_threshold, distance_to_success,  move_base_cfg):
         self.default_speed=default_speed
         self.base_radius=base_radius
         self.getting_further_counter_threshold=getting_further_counter_threshold #limit of number of consecutive  poses getting further away from the goal to output with 'aborted'
         self.distance_to_success=distance_to_success #once the robot is less than this value from the goal, it stops with success
-              
+        self.move_base_cfg = move_base_cfg
+        self.cmd_vel_pub = rospy.Publisher("/cmd_vel", Twist, queue_size=1)
+        self.last_twist = None
+
         self.pose_x=0.0
         self.pose_y=0.0
         self.current_angle=0.0
@@ -47,6 +54,7 @@ class DoorUtils(object):
         self.range_max=msg.range_max
         self.ranges=msg.ranges
     
+
     def calculate_angle_diff(self, r_x, r_y):
         angle_diff=math.atan2(r_y,r_x)-self.current_angle
         while (angle_diff >= math.pi):
@@ -57,7 +65,7 @@ class DoorUtils(object):
     
     def rotate_towards_pose(self, target_pose):
         robot_pose_sub = rospy.Subscriber("/robot_pose", Pose, self.pose_cb)
-        cmd_vel_pub=rospy.Publisher("/cmd_vel", Twist, queue_size=1)
+        
         base_cmd=Twist()
         rospy.loginfo("Rotating towards x=" + str(target_pose.position.x) + ", y=" + str(target_pose.position.y));
         self.new_pose_msg=False
@@ -76,11 +84,11 @@ class DoorUtils(object):
                 r_y = target_pose.position.y-self.pose_y
                 angle_diff=self.calculate_angle_diff(r_x,r_y)               
                 base_cmd.angular.z = angle_diff*0.5;
-                rospy.loginfo("Publishing to cmd_vel: base_cmd.linear.x=" + str(base_cmd.linear.x) + " base_cmd.angular.z=" + str(base_cmd.angular.z))
-                cmd_vel_pub.publish(base_cmd)
+  
+                self.publish_cmd(base_cmd)
         base_cmd.angular.z = 0
-        rospy.loginfo("Publishing to cmd_vel: base_cmd.linear.x=" + str(base_cmd.linear.x) + " base_cmd.angular.z=" + str(base_cmd.angular.z))
-        cmd_vel_pub.publish(base_cmd)
+  
+        self.publish_cmd(base_cmd)
 
         
     def check_door(self, target_pose): #assumes robot is facing the door
@@ -112,7 +120,6 @@ class DoorUtils(object):
     def pass_door(self, target_pose): #assumes robot is facing the door and the door is open
         robot_pose_sub = rospy.Subscriber("/robot_pose", Pose, self.pose_cb)
         scan_sub = rospy.Subscriber("/scan", LaserScan, self.scan_cb)
-        cmd_vel_pub=rospy.Publisher("/cmd_vel", Twist, queue_size=1)
         base_cmd=Twist()
         self.new_pose_msg=False
         self.new_scan_msg=False
@@ -135,7 +142,7 @@ class DoorUtils(object):
                 rospy.loginfo("Close enough to goal pose, door pass success.")
                 base_cmd.angular.z =0.0
                 base_cmd.linear.x = 0.0
-                cmd_vel_pub.publish(base_cmd)
+                self.publish_cmd(base_cmd)
                 return True
             if (prev_dist_to_goal < dist_to_goal):
                 getting_further_counter=getting_further_counter+1
@@ -144,10 +151,12 @@ class DoorUtils(object):
                 getting_further_counter=0
                 rospy.loginfo("Getting closer to goal")
             if getting_further_counter > self.getting_further_counter_threshold:
-                rospy.loginfo("Getting too further from the goal. Door pass failure.")
-                base_cmd.angular.z =0.0
+                rospy.loginfo("Getting too far from the goal. Door pass failure.")
+                base_cmd.angular.z = 0.0
                 base_cmd.linear.x = 0.0
-                cmd_vel_pub.publish(base_cmd)
+                # doing it once wasn't doing much
+                for i in range(5):
+                    self.publish_cmd(base_cmd)
                 return False
             left_minim=100
             right_minim = 100
@@ -173,4 +182,21 @@ class DoorUtils(object):
                 base_cmd.angular.z =0
                 base_cmd.linear.x = 0.2
             rospy.loginfo("Publishing to cmd_vel: base_cmd.linear.x=" + str(base_cmd.linear.x) + " base_cmd.angular.z=" + str(base_cmd.angular.z))              
-            cmd_vel_pub.publish(base_cmd)
+            self.publish_cmd(base_cmd)
+
+
+
+    def publish_cmd(self, cmd):
+
+        if self.move_base_cfg is not None:
+            # self.move_base_cfg = {'min_vel_x': 0.0, 'min_vel_y': 0.0,  'min_rot_vel': 0.4, 'acc_lim_x': 1.0, 'acc_lim_y': 0.0, 'acc_lim_theta': 3.2, 'max_rot_vel': 1.0, 'max_vel_x': 0.55, 'max_vel_y': 0.0}
+            # todo: also use acc_lim_x and acc_lim_theta
+            new_cmd = Twist()
+            max_vel_x = self.move_base_cfg['max_vel_x']
+            max_rot_vel = self.move_base_cfg['max_rot_vel']
+            new_cmd.linear.x = clamp(cmd.linear.x, -max_vel_x, max_vel_x)
+            new_cmd.angular.z = clamp(cmd.angular.z, -max_rot_vel, max_rot_vel)
+            cmd = new_cmd
+
+        rospy.loginfo("Publishing to cmd_vel: base_cmd.linear.x=" + str(cmd.linear.x) + " cmd.angular.z=" + str(cmd.angular.z))
+        self.cmd_vel_pub.publish(cmd)
