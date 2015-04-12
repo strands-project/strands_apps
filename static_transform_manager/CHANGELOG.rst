@@ -2,8 +2,8 @@
 Changelog for package static_transform_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.6 (2015-04-12)
+------------------
 * Fix import bug.
 * Contributors: Chris Burbridge
 
