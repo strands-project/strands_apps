@@ -2,6 +2,7 @@
 
 import rospy
 import actionlib
+from actionlib_msgs.msg import GoalStatusArray, GoalStatus
 from move_base_msgs.msg import MoveBaseAction
 from door_pass.door_utils import DoorUtils
 import dynamic_reconfigure.client
@@ -12,15 +13,20 @@ class DoorPass(object):
     def __init__(self):
         self.door_as=actionlib.SimpleActionServer('doorPassing', MoveBaseAction, execute_cb = self.execute_cb, auto_start=False) 
         self.door_as.start()
+        
+        self.mon_nav_status_sub=rospy.Subscriber("/monitored_navigation/status", GoalStatusArray, self.mon_nav_status_cb)
+        self.mon_nav_executing=False
+
+    def mon_nav_status_cb(self, data):
+        self.mon_nav_executing=data.status_list!=[] and data.status_list[0].status==GoalStatus.ACTIVE
 
     def execute_cb(self, goal):
-
 
         default_speed=rospy.get_param("~/default_speed", 0.15)
         base_radius=rospy.get_param("~/base_radius", 0.31)
         getting_further_counter_threshold=rospy.get_param("~/getting_further_counter_threshold", 5)
         distance_to_success=rospy.get_param("~/distance_to_success", 0.2)
-
+        
         # read speed limits frmo move base
         client = dynamic_reconfigure.client.Client('/move_base/DWAPlannerROS', timeout=5)
         config = client.get_configuration(timeout=5)
@@ -42,11 +48,9 @@ class DoorPass(object):
             self.door_as.set_preempted()
             rospy.loginfo("Door pass action preempted")
             return
-        #put recover states off
         rospy.loginfo("Door pass action server calling check door")
         door_open=self.door_utils.check_door(target_pose)
         if door_open:
-            #put recover states on
             if self.door_as.is_preempt_requested():
                 self.door_as.set_preempted()
                 rospy.loginfo("Door pass action preempted")
@@ -60,8 +64,17 @@ class DoorPass(object):
                 self.door_as.set_aborted()
                 return
         else:
+            rospy.loginfo("Door is closed. Disabling monitored navigation recoveries.")
+            current_mon_nav_recover_states=rospy.get_param("/monitored_navigation/recover_states/", {})
+            for mon_nav_recover_state, value in current_mon_nav_recover_states.iteritems():
+                rospy.set_param("/monitored_navigation/recover_states/" + mon_nav_recover_state, [False, value[1]])
             self.door_as.set_aborted()
             #wait for mon nav to output failure and get recover states back on
+            while self.mon_nav_executing:
+                rospy.loginfo("Waiting for monitored navigation to stop executing")
+                rospy.sleep(0.1)
+            rospy.loginfo("Monitored navigation stopped executing. Resetting monitored navigation recoveries.")
+            rospy.set_param("/monitored_navigation/recover_states/", current_mon_nav_recover_states)
             return
 
 
