@@ -44,9 +44,18 @@ class emailServer(object):
         part1 = MIMEText(texts, 'plain')
         msg.attach(part1)
         
-        server = smtplib.SMTP(self.smtp_add)
+        try:
+            server = smtplib.SMTP(self.smtp_add)
+            server.sendmail(me, goal.to_address, msg.as_string())
+            print "Successfully sent email"
+        except smtplib.SMTPException('Error: unable to send email'):
+            print 'Error: unable to send email'
+            return False
+        except smtplib.socket.error ('Error: could not connect to server'):
+            print 'Error: unable to send email'
+            return False        
         
-        server.sendmail(me, goal.to_address, msg.as_string())
+        
         server.quit()
         return True
 
