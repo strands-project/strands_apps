@@ -1,9 +1,17 @@
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Changelog for package strands_emails
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Changelog for package static_transform_manager
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 0.1.6 (2015-04-12)
 ------------------
+* Fix import bug.
+* Contributors: Chris Burbridge
+
+0.1.5 (2015-03-31)
+------------------
+* homogenised version numbers
+* New static_transform_manager package.
+* Contributors: Chris Burbridge, Marc Hanheide
 
 0.1.4 (2015-03-19)
 ------------------
@@ -11,17 +19,11 @@ Changelog for package strands_emails
 0.1.3 (2015-03-16)
 ------------------
 
-0.1.2 (2014-11-20)
-------------------
-* fixing dir name
-* Contributors: Jaime Pulido Fentanes
+0.1.2 (2014-11-20 18:04)
+------------------------
 
-0.1.1 (2014-11-20)
-------------------
-* version numbers all the same now
-* making strands_email less linda specific
-* adding strands_emails
-* Contributors: Jaime Pulido Fentanes, Marc Hanheide
+0.1.1 (2014-11-20 17:23)
+------------------------
 
 0.1.0 (2014-11-19)
 ------------------

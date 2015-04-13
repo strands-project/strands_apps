@@ -19,7 +19,7 @@ class RoslaunchServer(object):
         self._action_name = name
         self._as = actionlib.ActionServer(
             self._action_name, roslaunch_axserver.msg.launchAction,
-            self.execute_cb, self.cancel_cb)
+            self.execute_cb, self.cancel_cb, auto_start=False)
         self._as.start()
         self.p = {}
         rospy.loginfo('Server is up')
@@ -69,6 +69,7 @@ class RoslaunchServer(object):
         rospy.loginfo('trigger roslaunch goal ' + gh.get_goal_id().id)
         goal = gh.get_goal()
         command = "exec roslaunch " + goal.pkg + " " + goal.launch_file
+        command+="".join([" "+x+":="+y for (x,y) in zip(map(str.strip,goal.parameters),map(str.strip,goal.values))])
         try:
             self.p[gh.get_goal_id()] = subprocess.Popen(
                 command, stdin=subprocess.PIPE, shell=True)
