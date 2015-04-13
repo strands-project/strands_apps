@@ -66,8 +66,8 @@ class DoorPass(object):
         else:
             rospy.loginfo("Door is closed. Disabling monitored navigation recoveries.")
             current_mon_nav_recover_states=rospy.get_param("/monitored_navigation/recover_states/", {})
-            for mon_nav_recover_state, value in current_mon_nav_recover_states.iteritems():
-                rospy.set_param("/monitored_navigation/recover_states/" + mon_nav_recover_state, [False, value[1]])
+            for mon_nav_recover_state in current_mon_nav_recover_states:
+                rospy.set_param("/monitored_navigation/recover_states/" + mon_nav_recover_state, [False,0])
             self.door_as.set_aborted()
             #wait for mon nav to output failure and get recover states back on
             while self.mon_nav_executing:
