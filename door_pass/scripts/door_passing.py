@@ -4,13 +4,21 @@ import rospy
 import actionlib
 from actionlib_msgs.msg import GoalStatusArray, GoalStatus
 from move_base_msgs.msg import MoveBaseAction
-from door_pass.door_utils import DoorUtils
-import dynamic_reconfigure.client
-
-
+from door_pass.door_utils import DoorUtils    
+   
 class DoorPass(object):
-
     def __init__(self):
+        max_trans_vel=rospy.get_param("~/max_trans_vel", 0.15)
+        max_rot_vel=rospy.get_param("~/max_rot_vel", 0.4)
+        base_radius=rospy.get_param("~/base_radius", 0.31)
+        getting_further_counter_threshold=rospy.get_param("~/getting_further_counter_threshold", 5)
+        distance_to_success=rospy.get_param("~/distance_to_success", 0.2)
+        self.door_utils=DoorUtils(max_trans_vel=max_trans_vel,
+                                  max_rot_vel=max_rot_vel,
+                                  base_radius=base_radius,
+                                  getting_further_counter_threshold=getting_further_counter_threshold,
+                                  distance_to_success=distance_to_success)
+        
         self.door_as=actionlib.SimpleActionServer('doorPassing', MoveBaseAction, execute_cb = self.execute_cb, auto_start=False) 
         self.door_as.start()
         
@@ -18,26 +26,25 @@ class DoorPass(object):
         self.mon_nav_executing=False
 
     def mon_nav_status_cb(self, data):
-        self.mon_nav_executing=data.status_list!=[] and data.status_list[0].status==GoalStatus.ACTIVE
+        result=False
+        for goal in data.status_list:
+            if goal.status==GoalStatus.ACTIVE:
+                result=True
+                break
+        self.mon_nav_executing=result
 
     def execute_cb(self, goal):
-
-        default_speed=rospy.get_param("~/default_speed", 0.15)
+        max_trans_vel=rospy.get_param("~/max_trans_vel", 0.15)
+        max_rot_vel=rospy.get_param("~/max_rot_vel", 0.4)
         base_radius=rospy.get_param("~/base_radius", 0.31)
         getting_further_counter_threshold=rospy.get_param("~/getting_further_counter_threshold", 5)
-        distance_to_success=rospy.get_param("~/distance_to_success", 0.2)
+        distance_to_success=rospy.get_param("~/distance_to_success", 0.2)        
+        self.door_utils.set_params(max_trans_vel=max_trans_vel,
+                                  max_rot_vel=max_rot_vel,
+                                  base_radius=base_radius,
+                                  getting_further_counter_threshold=getting_further_counter_threshold,
+                                  distance_to_success=distance_to_success)
         
-        # read speed limits frmo move base
-        client = dynamic_reconfigure.client.Client('/move_base/DWAPlannerROS', timeout=5)
-        config = client.get_configuration(timeout=5)
-
-        # these are taken from the current strands movebase config
-        if config is None:
-            config = {'min_vel_x': 0.0, 'min_vel_y': 0.0,  'min_rot_vel': 0.4, 'acc_lim_x': 1.0, 'acc_lim_y': 0.0, 'acc_lim_theta': 3.2, 'max_rot_vel': 1.0, 'max_vel_x': 0.55, 'max_vel_y': 0.0}
-
-        self.door_utils=DoorUtils(default_speed=default_speed, base_radius=base_radius, getting_further_counter_threshold=getting_further_counter_threshold, distance_to_success=distance_to_success, move_base_cfg=config)
-        
-
         if self.door_as.is_preempt_requested():
             self.door_as.set_preempted()
             return
@@ -70,18 +77,17 @@ class DoorPass(object):
                 rospy.set_param("/monitored_navigation/recover_states/" + mon_nav_recover_state, [False,0])
             self.door_as.set_aborted()
             #wait for mon nav to output failure and get recover states back on
-            while self.mon_nav_executing:
+            timeout=0
+            while self.mon_nav_executing and not self.door_as.is_preempt_requested() and timeout<30:
                 rospy.loginfo("Waiting for monitored navigation to stop executing")
                 rospy.sleep(0.1)
+                timeout=timeout+1
             rospy.loginfo("Monitored navigation stopped executing. Resetting monitored navigation recoveries.")
             rospy.set_param("/monitored_navigation/recover_states/", current_mon_nav_recover_states)
             return
 
-
-
     def main(self):
         rospy.spin()
-
     
 if __name__ == '__main__':
     rospy.init_node("door_pass_node")

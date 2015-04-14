@@ -1,6 +1,4 @@
 import math
-from tf.transformations import euler_from_quaternion
-
 import rospy
 
 from sensor_msgs.msg import LaserScan
@@ -12,12 +10,12 @@ def clamp(value, lower, upper):
 
 
 class DoorUtils(object):
-    def __init__(self, default_speed, base_radius, getting_further_counter_threshold, distance_to_success,  move_base_cfg):
-        self.default_speed=default_speed
+    def __init__(self, max_trans_vel, max_rot_vel, base_radius, getting_further_counter_threshold, distance_to_success):
+        self.max_trans_vel=max_trans_vel
+        self.max_rot_vel=max_rot_vel
         self.base_radius=base_radius
         self.getting_further_counter_threshold=getting_further_counter_threshold #limit of number of consecutive  poses getting further away from the goal to output with 'aborted'
         self.distance_to_success=distance_to_success #once the robot is less than this value from the goal, it stops with success
-        self.move_base_cfg = move_base_cfg
         self.cmd_vel_pub = rospy.Publisher("/cmd_vel", Twist, queue_size=1)
         self.last_twist = None
 
@@ -74,7 +72,6 @@ class DoorUtils(object):
         r_x = target_pose.position.x-self.pose_x
         r_y = target_pose.position.y-self.pose_y
         angle_diff=self.calculate_angle_diff(r_x,r_y)
-        print angle_diff
         while math.fabs(angle_diff)>0.1:
             if self.new_pose_msg:
                 self.new_pose_msg=False
@@ -162,6 +159,8 @@ class DoorUtils(object):
                 return False
             left_minim=100
             right_minim = 100
+            left_min_angle=None
+            right_min_angle=None
             num_ranges=len(self.ranges)
             for i in range(0,num_ranges):
                 angle = self.angle_min+i*self.angle_increment
@@ -169,36 +168,49 @@ class DoorUtils(object):
                 x = d*math.cos(angle)
                 y = d*math.sin(angle)
                 if (x < 0.55):
-                    if (i<num_ranges/2):
+                    if angle>-math.pi/2 and angle<-math.pi/6:
                         if (right_minim>-y):
+                            right_min_angle=angle
                             right_minim = -y
-                    else:
+                    elif angle>math.pi/6 and angle<math.pi/2 :
                         if (left_minim>y):
+                            left_min_angle=angle
                             left_minim = y
             left_minim-=self.base_radius
             right_minim-=self.base_radius
             rospy.loginfo("left_minim=" + str(left_minim) + " , right_minim=" + str(right_minim))
-            base_cmd.linear.x = max(min(3*min(right_minim,left_minim),self.default_speed),0)
+            base_cmd.linear.x = max(3*min(right_minim,left_minim),0)
             base_cmd.angular.z = 2*(left_minim-right_minim)
             if (left_minim > 0.1 and right_minim >0.1):
                 base_cmd.angular.z =0
-                base_cmd.linear.x = 0.2
+                base_cmd.linear.x = self.max_trans_vel
             rospy.loginfo("Publishing to cmd_vel: base_cmd.linear.x=" + str(base_cmd.linear.x) + " base_cmd.angular.z=" + str(base_cmd.angular.z))              
             self.publish_cmd(base_cmd)
 
-
-
     def publish_cmd(self, cmd):
-
-        if self.move_base_cfg is not None:
-            # self.move_base_cfg = {'min_vel_x': 0.0, 'min_vel_y': 0.0,  'min_rot_vel': 0.4, 'acc_lim_x': 1.0, 'acc_lim_y': 0.0, 'acc_lim_theta': 3.2, 'max_rot_vel': 1.0, 'max_vel_x': 0.55, 'max_vel_y': 0.0}
-            # todo: also use acc_lim_x and acc_lim_theta
-            new_cmd = Twist()
-            max_vel_x = self.move_base_cfg['max_vel_x']
-            max_rot_vel = self.move_base_cfg['max_rot_vel']
-            new_cmd.linear.x = clamp(cmd.linear.x, -max_vel_x, max_vel_x)
-            new_cmd.angular.z = clamp(cmd.angular.z, -max_rot_vel, max_rot_vel)
-            cmd = new_cmd
-
+        new_cmd = Twist()
+        new_cmd.linear.x = clamp(cmd.linear.x, -self.max_trans_vel, self.max_trans_vel)
+        new_cmd.angular.z = clamp(cmd.angular.z, -self.max_rot_vel, self.max_rot_vel)
+        cmd = new_cmd
         rospy.loginfo("Publishing to cmd_vel: base_cmd.linear.x=" + str(cmd.linear.x) + " cmd.angular.z=" + str(cmd.angular.z))
         self.cmd_vel_pub.publish(cmd)
+        
+    def set_params(self,
+                  max_trans_vel=None,
+                  max_rot_vel=None,
+                  base_radius=None,
+                  getting_further_counter_threshold=None,
+                  distance_to_success=None):
+        if max_trans_vel is not None:
+            self.max_trans_vel=max_trans_vel
+        if max_rot_vel is not None:
+            self.max_rot_vel=max_rot_vel
+        if base_radius is not None:
+            self.base_radius=base_radius
+        if getting_further_counter_threshold is not None:
+            self.getting_further_counter_threshold=getting_further_counter_threshold
+        if distance_to_success is not None:
+            self.distance_to_success=distance_to_success
+        
+        
+        
