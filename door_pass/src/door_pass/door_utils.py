@@ -112,7 +112,7 @@ class DoorUtils(object):
                     open_door_counter=open_door_counter+1
         rospy.loginfo("Front laser door check results. closed_door_counter=" + str(closed_door_counter) + " , open_door_counter=" + str(open_door_counter))                        
         #log result in mongo
-        return (open_door_counter>closed_door_counter)
+        return (closed_door_counter<10)
     
     def pass_door(self, target_pose): #assumes robot is facing the door and the door is open
         robot_pose_sub = rospy.Subscriber("/robot_pose", Pose, self.pose_cb)
@@ -157,33 +157,37 @@ class DoorUtils(object):
                 for i in range(5):
                     self.publish_cmd(base_cmd)
                 return False
-            left_minim=100
-            right_minim = 100
-            front_minim=100
+            left_minim=0.4
+            right_minim = 0.4
+            front_minim=1
             num_ranges=len(self.ranges)
             for i in range(0,num_ranges):
                 angle = self.angle_min+i*self.angle_increment
                 d = self.ranges[i]
                 x = d*math.cos(angle)
                 y = d*math.sin(angle)
-                if angle>-math.pi/2 and angle<-math.pi/6:
-                    if (right_minim>-y):
-                        right_minim = -y
-                elif angle>math.pi/6 and angle<math.pi/2 :
-                    if (left_minim>y):
-                        left_minim = y
-                elif angle>-math.pi/6 and angle<math.pi/6:
+                if y<0.4:
+                    if angle<-math.pi/4:
+                        if (right_minim>-y):
+                            right_minim = -y
+                    elif angle>math.pi/4:
+                        if (left_minim>y):
+                            left_minim = y
+                if angle>-math.pi/4 and angle<math.pi/4:
                     if front_minim>d:
                         front_minim=d                        
             left_minim-=self.base_radius
             right_minim-=self.base_radius
-            front_minim=max(front_minim-0.15,0)
+            front_minim=front_minim-0.2
             rospy.loginfo("left_minim=" + str(left_minim) + " , right_minim=" + str(right_minim) + " , front_minim=" + str(front_minim))
-            base_cmd.linear.x = self.max_trans_vel*front_minim
+            if front_minim<=0:
+                rospy.loginfo("Too close to an obstacle. Aborting.")
+                return False
+            base_cmd.linear.x = 2*self.max_trans_vel*front_minim
             base_cmd.angular.z = 2*(left_minim-right_minim)
             if (left_minim > 0.1 and right_minim >0.1):
                 base_cmd.angular.z =0
-                base_cmd.linear.x = self.max_trans_vel
+                base_cmd.linear.x = 2*self.max_trans_vel*front_minim
             rospy.loginfo("Publishing to cmd_vel: base_cmd.linear.x=" + str(base_cmd.linear.x) + " base_cmd.angular.z=" + str(base_cmd.angular.z))              
             self.publish_cmd(base_cmd)
 
