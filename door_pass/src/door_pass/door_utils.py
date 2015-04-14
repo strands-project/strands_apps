@@ -159,27 +159,27 @@ class DoorUtils(object):
                 return False
             left_minim=100
             right_minim = 100
-            left_min_angle=None
-            right_min_angle=None
+            front_minim=100
             num_ranges=len(self.ranges)
             for i in range(0,num_ranges):
                 angle = self.angle_min+i*self.angle_increment
                 d = self.ranges[i]
                 x = d*math.cos(angle)
                 y = d*math.sin(angle)
-                if (x < 0.55):
-                    if angle>-math.pi/2 and angle<-math.pi/6:
-                        if (right_minim>-y):
-                            right_min_angle=angle
-                            right_minim = -y
-                    elif angle>math.pi/6 and angle<math.pi/2 :
-                        if (left_minim>y):
-                            left_min_angle=angle
-                            left_minim = y
+                if angle>-math.pi/2 and angle<-math.pi/6:
+                    if (right_minim>-y):
+                        right_minim = -y
+                elif angle>math.pi/6 and angle<math.pi/2 :
+                    if (left_minim>y):
+                        left_minim = y
+                elif angle>-math.pi/6 and angle<math.pi/6:
+                    if front_minim>d:
+                        front_minim=d                        
             left_minim-=self.base_radius
             right_minim-=self.base_radius
-            rospy.loginfo("left_minim=" + str(left_minim) + " , right_minim=" + str(right_minim))
-            base_cmd.linear.x = max(3*min(right_minim,left_minim),0)
+            front_minim=max(front_minim-0.15,0)
+            rospy.loginfo("left_minim=" + str(left_minim) + " , right_minim=" + str(right_minim) + " , front_minim=" + str(front_minim))
+            base_cmd.linear.x = self.max_trans_vel*front_minim
             base_cmd.angular.z = 2*(left_minim-right_minim)
             if (left_minim > 0.1 and right_minim >0.1):
                 base_cmd.angular.z =0
