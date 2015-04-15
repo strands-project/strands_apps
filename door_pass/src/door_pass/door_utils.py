@@ -1,9 +1,13 @@
 import math
 import rospy
 
+from std_msgs.msg import String
 from sensor_msgs.msg import LaserScan
 from geometry_msgs.msg import Twist, Pose
 from nav_msgs.msg import Path
+from door_pass.msg import DoorCheckStat
+
+from mongodb_store.message_store import MessageStoreProxy
 
 def clamp(value, lower, upper):
     return min(max(lower, value), upper)
@@ -40,7 +44,8 @@ class DoorUtils(object):
         self.new_pose_msg = False
         self.new_scan_msg = False
         
-        self.is_active=False
+        self.is_active=False        
+        self.mongo_logger=message_proxy=MessageStoreProxy(collection='door_checks')
         
     def activate(self):
         self.is_active=True
@@ -126,7 +131,14 @@ class DoorUtils(object):
                         open_door_counter=open_door_counter+1
             rospy.loginfo("Front laser door check results. closed_door_counter=" + str(closed_door_counter) + " , open_door_counter=" + str(open_door_counter))                        
             #log result in mongo
-            return (closed_door_counter<10)
+            is_open=closed_door_counter<10
+            try:
+                waypoint=rospy.wait_for_message("/current_node", String, 5)
+                #TODO get current top map name
+                self.mongo_logger.insert(DoorCheckStat(is_open=is_open, waypoint=waypoint.data))
+            except Exception, e:
+                rospy.logwarn("Error logging door check " + str(e))
+            return is_open
         else:
             return False
     

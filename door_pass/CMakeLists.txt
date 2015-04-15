@@ -25,10 +25,15 @@ catkin_python_setup()
 ## Declare ROS messages and services ##
 #######################################
 
+add_message_files(
+  FILES
+  DoorCheckStat.msg
+)
+
 add_action_files(
-	DIRECTORY action 
-	FILES 
-	DoorCheck.action
+    DIRECTORY action 
+    FILES 
+    DoorCheck.action
 )
 
 generate_messages(

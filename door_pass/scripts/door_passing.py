@@ -21,12 +21,14 @@ class DoorPass(object):
                                   getting_further_counter_threshold=getting_further_counter_threshold,
                                   distance_to_success=distance_to_success)
         
+        self.mon_nav_status_sub=rospy.Subscriber("/monitored_navigation/status", GoalStatusArray, self.mon_nav_status_cb)
+        
         self.door_as=actionlib.SimpleActionServer('doorPassing', MoveBaseAction, execute_cb = self.execute_cb, auto_start=False) 
         self.door_as.start()
-        self.door_as.register_preempt_callback(self.door_as_preempt_cb)
-        
-        self.mon_nav_status_sub=rospy.Subscriber("/monitored_navigation/status", GoalStatusArray, self.mon_nav_status_cb)
+        self.door_as.register_preempt_callback(self.door_as_preempt_cb)        
         self.mon_nav_executing=False
+        
+        
 
     def mon_nav_status_cb(self, data):
         result=False

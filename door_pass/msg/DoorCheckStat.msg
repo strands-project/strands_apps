@@ -1,0 +1,3 @@
+string topological_map_name
+string waypoint
+bool is_open
