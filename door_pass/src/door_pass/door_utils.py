@@ -134,8 +134,10 @@ class DoorUtils(object):
             is_open=closed_door_counter<10
             try:
                 waypoint=rospy.wait_for_message("/current_node", String, 5)
-                #TODO get current top map name
-                self.mongo_logger.insert(DoorCheckStat(is_open=is_open, waypoint=waypoint.data))
+                topological_map_name=rospy.get_param("/topological_map_name", "")
+                self.mongo_logger.insert(DoorCheckStat(topological_map_name=topological_map_name,
+                                                       waypoint=waypoint.data,
+                                                       is_open=is_open))
             except Exception, e:
                 rospy.logwarn("Error logging door check " + str(e))
             return is_open
