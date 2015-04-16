@@ -16,6 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
     sensor_msgs
     std_msgs 
     tf
+    mongodb_store
     )
 set ( CMAKE_CXX_FLAGS "-ggdb")
 
