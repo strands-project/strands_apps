@@ -2,6 +2,9 @@
 Changelog for package pose_extractor
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.1.6 (2015-04-12)
 ------------------
 

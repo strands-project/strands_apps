@@ -2,6 +2,11 @@
 Changelog for package strands_apps
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* adding error handling and strands emails to metapackage
+* Contributors: Jailander
+
 0.1.6 (2015-04-12)
 ------------------
 
