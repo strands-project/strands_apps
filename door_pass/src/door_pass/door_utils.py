@@ -106,7 +106,7 @@ class DoorUtils(object):
             self.stop_robot()
 
         
-    def check_door(self, target_pose): #assumes robot is facing the door
+    def check_door(self, target_pose=None): #assumes robot is facing the door
         if self.is_active:
             robot_pose_sub = rospy.Subscriber("/robot_pose", Pose, self.pose_cb)
             scan_sub = rospy.Subscriber("/scan", LaserScan, self.scan_cb)
@@ -114,9 +114,12 @@ class DoorUtils(object):
             self.new_scan_msg=False
             while (not self.new_pose_msg) or (not self.new_scan_msg):
                 rospy.sleep(0.05)
-            r_x = target_pose.position.x-self.pose_x
-            r_y = target_pose.position.y-self.pose_y
-            dist_to_goal=math.sqrt(r_x*r_x+r_y*r_y)
+            if target_pose is None:
+                dist_to_goal=2 #use 3m                
+            else:
+                r_x = target_pose.position.x-self.pose_x
+                r_y = target_pose.position.y-self.pose_y
+                dist_to_goal=math.sqrt(r_x*r_x+r_y*r_y)
             closed_door_counter=0
             open_door_counter=0
             rospy.loginfo("Checking if door is opening using the current distance to goal: "+  str(dist_to_goal))
