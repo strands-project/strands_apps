@@ -2,8 +2,8 @@
 Changelog for package strands_emails
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.7 (2015-04-17)
+------------------
 * adding error handling and strands emails to metapackage
 * Contributors: Jailander
 

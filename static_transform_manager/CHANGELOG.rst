@@ -2,8 +2,8 @@
 Changelog for package static_transform_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.7 (2015-04-17)
+------------------
 * Add is_ok flag to StopTransformation response.
 * Contributors: Chris Burbridge
 
