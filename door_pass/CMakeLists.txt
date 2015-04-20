@@ -16,6 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
     sensor_msgs
     std_msgs 
     tf
+    mongodb_store
     )
 set ( CMAKE_CXX_FLAGS "-ggdb")
 
@@ -25,10 +26,15 @@ catkin_python_setup()
 ## Declare ROS messages and services ##
 #######################################
 
+add_message_files(
+  FILES
+  DoorCheckStat.msg
+)
+
 add_action_files(
-	DIRECTORY action 
-	FILES 
-	DoorCheck.action
+    DIRECTORY action 
+    FILES 
+    DoorCheck.action
 )
 
 generate_messages(
@@ -69,6 +75,7 @@ target_link_libraries (door_detect  ${catkin_LIBRARIES})
 
  install(PROGRAMS
    scripts/door_passing.py
+   scripts/door_checking.py
    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
  )
 
