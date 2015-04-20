@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>topic_republisher</name>
-  <version>0.1.5</version>
+  <version>0.1.7</version>
   <description>The topic_republisher package</description>
 
   <maintainer email="n.a.hawes@cs.bham.ac.uk">Nick Hawes</maintainer>

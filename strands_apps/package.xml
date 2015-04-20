@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>strands_apps</name>
-  <version>0.1.5</version>
+  <version>0.1.7</version>
   <description>The strands_apps metapackage</description>
 
   <maintainer email="cdondrup@lincoln.ac.uk">Christian Dondrup</maintainer>
@@ -20,6 +20,7 @@
   <run_depend>reconfigure_inflation</run_depend>
   <run_depend>roslaunch_axserver</run_depend>
   <run_depend>state_checker</run_depend>
+  <run_depend>strands_emails</run_depend>
   <run_depend>topic_republisher</run_depend>
   <run_depend>marathon_reporter</run_depend>
 
