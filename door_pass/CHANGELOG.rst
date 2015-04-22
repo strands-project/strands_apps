@@ -2,8 +2,8 @@
 Changelog for package door_pass
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.8 (2015-04-22)
+------------------
 * Merge pull request `#41 <https://github.com/strands-project/strands_apps/issues/41>`_ from bfalacerda/indigo-devel
   door pass improvements
 * add door check script
