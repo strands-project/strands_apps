@@ -2,6 +2,9 @@
 Changelog for package topic_republisher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.1.8 (2015-04-22)
 ------------------
 

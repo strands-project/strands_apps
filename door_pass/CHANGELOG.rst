@@ -2,6 +2,11 @@
 Changelog for package door_pass
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* launch file for new door pass and check
+* Contributors: Bruno Lacerda
+
 0.1.8 (2015-04-22)
 ------------------
 * Merge pull request `#41 <https://github.com/strands-project/strands_apps/issues/41>`_ from bfalacerda/indigo-devel

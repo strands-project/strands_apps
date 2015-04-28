@@ -2,6 +2,9 @@
 Changelog for package odometry_mileage
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.1.8 (2015-04-22)
 ------------------
 
