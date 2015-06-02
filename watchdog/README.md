@@ -7,7 +7,7 @@ and takes a specified action if any condition becomes true.
 
 `rosrun watchdog watchdog _config:=/path/to/config.yaml`
 
-where `config.yaml` is the configuration specifying a list of watchdog in 
+where `config.yaml` is the configuration specifying a list of watchdogs in 
 terms of 'monitors' and 'actions':
 
 ```
@@ -98,7 +98,7 @@ The following actions are available:
 ### Monitors
 
 Monitors are classes that derive from the base classes 
-`watchdog.MonitorType. They must provide `name`, `description` and `config_keys`
+`watchdog.MonitorType`. They must provide `name`, `description` and `config_keys`
 fields at the class level and implement a `start()` and `stop()` method. `start()` 
 will be called when the monitor is started or restarted following the firing of 
 the watchdog. `stop()` will be called when the watchdog fires or is shutdown.
