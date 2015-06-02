@@ -1,0 +1,16 @@
+- name: Camera Node Watchdog
+  description: Monitors the camera driver node to ensure still publishing. If not, kills it.
+  restart_timeout: 30
+  monitors:
+      - monitor_type: TopicAlive
+        topic: /camera/camera_info
+        max_duration: 10
+  actions:
+      - action_type: KillNode
+        node_name: /camera_node
+      - action_type: SendEmail
+        to_addresses:  [hello@world.com]
+        from_address: watchdog@world.com
+        message: "Hello World"
+        server: unsecure.smtp.server.com
+        port: 25
