@@ -30,7 +30,7 @@ class MonitorType(object):
     def __init__(self, monitor_config, invalid_cb):
         """ monitor_config: the config dictionary for this monitor """
         # Check the keys are present in the config
-        for key in self.config_keys:
+        for (key, description) in self.config_keys:
             if not monitor_config.has_key(key):
                 raise Exception("'{}' monitor missing field '{}' in yaml".format(self.name,
                                                                                  key))

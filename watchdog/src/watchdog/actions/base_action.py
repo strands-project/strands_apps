@@ -30,7 +30,7 @@ class ActionType(object):
     def __init__(self, action_config):
         """ action_config: the config dictionary for this action """
         # Check the keys are present in the config
-        for key in self.config_keys:
+        for (key, description) in self.config_keys:
             if not action_config.has_key(key):
                 raise Exception("'{}' action missing field '{}' in yaml".format(self.name,
                                                                                  key))
