@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package>
-  <name>watchdog</name>
+  <name>watchdog_node</name>
   <version>0.1.9</version>
-  <description>The watchdog package provides configurable watchdogs that 
+  <description>The watchdog_node package provides configurable watchdogs that 
   trigger configurable actions.</description>
 
 

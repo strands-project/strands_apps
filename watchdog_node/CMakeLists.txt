@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(watchdog)
+project(watchdog_node)
 
 find_package(catkin REQUIRED)
 
@@ -7,7 +7,7 @@ catkin_python_setup()
 
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES watchdog
+#  LIBRARIES watchdog_node
   CATKIN_DEPENDS rospy rosnode rostopic
 #  DEPENDS system_lib
 )

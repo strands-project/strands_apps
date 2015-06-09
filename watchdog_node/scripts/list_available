@@ -1,6 +1,6 @@
 #!/usr/bin/python
-from watchdog.monitors import MonitorType
-from watchdog.actions import ActionType
+from watchdog_node.monitors import MonitorType
+from watchdog_node.actions import ActionType
 
 print "Monitors available:"
 print

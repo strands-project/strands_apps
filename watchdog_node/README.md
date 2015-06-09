@@ -1,11 +1,11 @@
-# watchdog
+# watchdog_node
 
 This package provides a 'watchdog' node that monitors for specified conditions,
 and takes a specified action if any condition becomes true. 
 
 ## Usage
 
-`rosrun watchdog watchdog _config:=/path/to/config.yaml`
+`rosrun watchdog_node watchdog_node _config:=/path/to/config.yaml`
 
 where `config.yaml` is the configuration specifying a list of watchdogs in 
 terms of 'monitors' and 'actions':
@@ -98,7 +98,7 @@ The following actions are available:
 ### Monitors
 
 Monitors are classes that derive from the base classes 
-`watchdog.MonitorType`. They must provide `name`, `description` and `config_keys`
+`watchdog_node.MonitorType`. They must provide `name`, `description` and `config_keys`
 fields at the class level and implement a `start()` and `stop()` method. `start()` 
 will be called when the monitor is started or restarted following the firing of 
 the watchdog. `stop()` will be called when the watchdog fires or is shutdown.
@@ -112,7 +112,7 @@ Note that all modules defining monitors need to be imported in `monitors/__init_
 
 ### Actions
 
-Actions are classes that derive from the base class `watchdog.ActionType`. Similar to 
+Actions are classes that derive from the base class `watchdog_node.ActionType`. Similar to 
 monitors they must provide `name`, `description` and `config_keys`
 fields at the class level. They must also provide a `execute(self)` method that
 will be called when the watchdog fires.
