@@ -1,0 +1,23 @@
+#!/usr/bin/python
+from watchdog_node.monitors import MonitorType
+from watchdog_node.actions import ActionType
+
+print "Monitors available:"
+print
+for act in MonitorType.registry.values():
+    print "- type: ", act.name
+    print "  description: ", act.description
+    print "  configuration fields:"
+    for f in act.config_keys:
+        print "    - ", f[0], " : ",  f[1]
+    print
+print
+print "Actions available:"
+print
+for act in ActionType.registry.values():
+    print "- type: ", act.name
+    print "  description: ", act.description
+    print "  configuration fields:"
+    for f in act.config_keys:
+        print "    - ", f[0], " : ",  f[1]
+    print
