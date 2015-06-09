@@ -15,7 +15,7 @@ catkin_package(
 ## Install ##
 
 install(PROGRAMS
-  scripts/watchdog scripts/list_available
+  scripts/watchdog_node scripts/list_available
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
