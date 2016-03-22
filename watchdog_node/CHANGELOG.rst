@@ -1,6 +1,12 @@
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Changelog for package strands_apps
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Changelog for package watchdog_node
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+0.1.10 (2015-06-09)
+-------------------
+* Fix renamed install target.
+* Rename package to watchdog_node.
+* Contributors: Chris Burbridge
 
 0.1.9 (2015-04-28)
 ------------------
@@ -10,10 +16,11 @@ Changelog for package strands_apps
 
 0.1.7 (2015-04-17)
 ------------------
-* adding error handling and strands emails to metapackage
-* Contributors: Jailander
 
 0.1.6 (2015-04-12)
+------------------
+
+0.1.5 (2015-03-31)
 ------------------
 
 0.1.4 (2015-03-19)
@@ -22,11 +29,17 @@ Changelog for package strands_apps
 0.1.3 (2015-03-16)
 ------------------
 
-0.1.2 (2014-11-20)
-------------------
+0.1.2 (2014-11-20 18:04)
+------------------------
+
+0.1.1 (2014-11-20 17:23)
+------------------------
 
 0.1.0 (2014-11-19)
 ------------------
+
+0.0.10 (2014-11-18)
+-------------------
 
 0.0.9 (2014-11-09)
 ------------------
@@ -34,16 +47,11 @@ Changelog for package strands_apps
 0.0.8 (2014-11-08)
 ------------------
 
-0.0.7 (2014-11-06)
-------------------
-* Created metapackage for easier install
-* Contributors: Christian Dondrup
+0.0.7 (2014-11-06 15:28)
+------------------------
 
-* Created metapackage for easier install
-* Contributors: Christian Dondrup
-
-0.0.6 (2014-11-06)
-------------------
+0.0.6 (2014-11-06 10:21)
+------------------------
 
 0.0.5 (2014-11-04)
 ------------------

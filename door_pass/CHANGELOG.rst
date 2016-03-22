@@ -2,6 +2,33 @@
 Changelog for package door_pass
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.1.9 (2015-04-28)
+------------------
+* launch file for new door pass and check
+* Contributors: Bruno Lacerda
+
+0.1.8 (2015-04-22)
+------------------
+* Merge pull request `#41 <https://github.com/strands-project/strands_apps/issues/41>`_ from bfalacerda/indigo-devel
+  door pass improvements
+* add door check script
+* update package.xml and CMakeLists
+* get topological map name for the logging
+* logging door checks to mongo
+* getting preemption to work
+* door pass tweaks
+* use only front langer ranges to calculate trans speed
+* * disable/enable recoveries from mon nav when door is closed
+  * used selected laser readings for the pass door calculations
+  * stop using move base config
+  * code clean
+* cleaner disable of mon nav recoveries
+* disable help from mon nav when door is closed
+* Added repeat publishing of stopping commands as they weren't behaving in sim. I think it might be the simulation though.
+* Limiting back x and rot value during door pass. This makes things a little slower and less repsonsive, but avoids big dangerous movements
+* code clean of door_passing.py
+* Contributors: Bruno Lacerda, Nick Hawes, STRANDS
+
 0.1.7 (2015-04-17)
 ------------------
 
