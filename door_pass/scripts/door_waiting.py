@@ -58,7 +58,7 @@ class DoorWait(object):
         wait_timer=rospy.Timer(rospy.Duration(wait_timeout), self.timer_cb, oneshot=True)
         while self.waiting and open_count<4:
             rospy.loginfo("Door wait and pass action server calling check door")
-            door_open=self.door_utils.check_door(target_pose)
+            door_open=self.door_utils.check_door(target_pose, 40)
             if door_open:
                 open_count+=1
             else:
