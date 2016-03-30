@@ -169,7 +169,7 @@ class DoorUtils(object):
         if not self.is_active:
             return False
       
-        opened=(open_count==consecutive_opens)
+        opened=(open_count==consecutive_opens+1)
         if log_to_mongo:
             try:
                 waypoint=rospy.wait_for_message("/current_node", String, 5)
