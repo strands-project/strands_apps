@@ -5,7 +5,6 @@ import actionlib
 from actionlib_msgs.msg import GoalStatusArray, GoalStatus
 from move_base_msgs.msg import MoveBaseAction
 from door_pass.door_utils import DoorUtils
-from mary_tts.msg import maryttsAction, maryttsGoal
 
    
 class DoorWaitAndPass(object):
@@ -17,6 +16,7 @@ class DoorWaitAndPass(object):
         getting_further_counter_threshold=rospy.get_param("~/getting_further_counter_threshold", 5)
         distance_to_success=rospy.get_param("~/distance_to_success", 0.2)
         self.wait_timeout=rospy.get_param("~/wait_timeout", 60)
+        self.stand_alone=rospy.get_param("~/do_waiting", False)
         
         self.door_utils=DoorUtils(max_trans_vel=max_trans_vel,
                                   max_rot_vel=max_rot_vel,
@@ -30,9 +30,7 @@ class DoorWaitAndPass(object):
         self.door_as=actionlib.SimpleActionServer('door_wait_and_pass', MoveBaseAction, execute_cb = self.execute_cb, auto_start=False) 
         self.door_as.start()
         self.door_as.register_preempt_callback(self.door_as_preempt_cb)        
-        self.mon_nav_executing=False
-        self.speaker = actionlib.SimpleActionClient('/speak', maryttsAction)
-        
+        self.mon_nav_executing=False        
 
     def mon_nav_status_cb(self, data):
         result=False
@@ -63,31 +61,25 @@ class DoorWaitAndPass(object):
         if self.door_as.is_preempt_requested():
             self.finish_execution(GoalStatus.PREEMPTED)
             return
-        self.waiting=True
-        open_count=0
-        wait_timer=rospy.Timer(rospy.Duration(self.wait_timeout), self.timer_cb, oneshot=True)
-        while self.waiting and open_count<4:
-            rospy.loginfo("Door wait and pass action server calling check door")
-            door_open=self.door_utils.check_door(target_pose, 40)
-            if door_open:
-                open_count+=1
-            else:
-                open_count=0
-            if self.door_as.is_preempt_requested():
-                self.finish_execution(GoalStatus.PREEMPTED)
-                return
-            rospy.sleep(rospy.Duration(0.5))
-        wait_timer.shutdown()
-        if open_count==4:
+
+        if self.stand_alone:
+            consecutive_opens=5
+        else:
+            consecutive_opens=1
+        opened=self.door_utils.wait_door(self.wait_timeout, target_pose, 40, False, self.stand_alone, consecutive_opens)
+        
+        if self.door_as.is_preempt_requested():
+            self.finish_execution(GoalStatus.PREEMPTED)
+            return
+
+        if opened:
             rospy.loginfo("The door is open. Door wait and pass action server is calling pass door")
-            self.speaker.send_goal(maryttsGoal(text="I'm going to pass the door. Please hold it for me."))
-            success=self.door_utils.pass_door(target_pose)
+            success=self.door_utils.pass_door(target_pose, speech=True)
             if self.door_as.is_preempt_requested():
                 self.finish_execution(GoalStatus.PREEMPTED)
                 return
             if success:
                 self.finish_execution(GoalStatus.SUCCEEDED)
-                self.speaker.send_goal(maryttsGoal(text="Great! Thank you for the help."))
                 return
             else:
                 self.finish_execution(GoalStatus.ABORTED)
@@ -122,8 +114,6 @@ class DoorWaitAndPass(object):
     def door_as_preempt_cb(self):
         self.door_utils.deactivate()
 
-    def timer_cb(self, event):
-        self.waiting=False
 
     def main(self):
         rospy.spin()
