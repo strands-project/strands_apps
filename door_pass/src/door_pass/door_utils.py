@@ -106,7 +106,7 @@ class DoorUtils(object):
             self.stop_robot()
 
         
-    def check_door(self, target_pose=None): #assumes robot is facing the door
+    def check_door(self, target_pose=None, n_closed=10): #assumes robot is facing the door
         if self.is_active:
             robot_pose_sub = rospy.Subscriber("/robot_pose", Pose, self.pose_cb)
             scan_sub = rospy.Subscriber("/scan", LaserScan, self.scan_cb)
@@ -134,7 +134,7 @@ class DoorUtils(object):
                         open_door_counter=open_door_counter+1
             rospy.loginfo("Front laser door check results. closed_door_counter=" + str(closed_door_counter) + " , open_door_counter=" + str(open_door_counter))                        
             #log result in mongo
-            is_open=closed_door_counter<10
+            is_open=closed_door_counter<n_closed
             try:
                 waypoint=rospy.wait_for_message("/current_node", String, 5)
                 topological_map_name=rospy.get_param("/topological_map_name", "")
