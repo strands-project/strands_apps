@@ -29,6 +29,7 @@ catkin_python_setup()
 add_message_files(
   FILES
   DoorCheckStat.msg
+  DoorWaitStat.msg
 )
 
 add_action_files(
