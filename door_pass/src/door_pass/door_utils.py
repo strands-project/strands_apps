@@ -49,6 +49,7 @@ class DoorUtils(object):
         self.is_active=False
         self.mongo_logger=message_proxy=MessageStoreProxy(collection='door_stats')
         self.speaker = SimpleActionClient('/speak', maryttsAction)
+        self.just_spoken=False
         
     def activate(self):
         self.is_active=True
@@ -152,6 +153,7 @@ class DoorUtils(object):
             return False
     
     def wait_door(self, wait_timeout, target_pose=None, n_closed=10, log_to_mongo=True, speak=True,consecutive_opens=4):
+        self.just_spoken=False
         open_count=0
         wait_elapsed=0.0
         while self.is_active and wait_elapsed < wait_timeout and open_count<=consecutive_opens:
@@ -161,7 +163,9 @@ class DoorUtils(object):
                 open_count+=1
             else:
                 open_count=0
-            if speak and open_count==1:
+            if speak and open_count==1 and not self.just_spoken:
+                speak_timer=rospy.Timer(rospy.Duration(10), self.timer_cb, oneshot=True)
+                self.just_spoken=True
                 self.speaker.send_goal(maryttsGoal(text="Please hold the door!"))
             rospy.sleep(rospy.Duration(0.5))
             wait_elapsed+=0.5
@@ -182,7 +186,9 @@ class DoorUtils(object):
                 rospy.logwarn("Error logging door check " + str(e))
         return opened
         
-
+    
+    def timer_cb(self, event):
+        self.just_spoken=False
     
     def pass_door(self, target_pose, speech=False): #assumes robot is facing the door and the door is open
         if self.is_active:
