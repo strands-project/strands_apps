@@ -54,7 +54,7 @@ class DoorWait(object):
             self.finish_execution(GoalStatus.PREEMPTED)
             return
         
-        opened=self.door_utils.wait_door(wait_timeout, target_pose, 40, True, 6)
+        opened=self.door_utils.wait_door(wait_timeout, target_pose, 40)
         
         if self.door_as.is_preempt_requested():
             self.finish_execution(GoalStatus.PREEMPTED)

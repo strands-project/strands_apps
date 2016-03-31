@@ -63,10 +63,10 @@ class DoorWaitAndPass(object):
             return
 
         if self.stand_alone:
-            consecutive_opens=5
+            consecutive_open_secs=2.5
         else:
-            consecutive_opens=1
-        opened=self.door_utils.wait_door(self.wait_timeout, target_pose, 40, False, self.stand_alone, consecutive_opens)
+            consecutive_open_secs=0.1
+        opened=self.door_utils.wait_door(self.wait_timeout, target_pose, 40, False, self.stand_alone, consecutive_open_secs)
         
         if self.door_as.is_preempt_requested():
             self.finish_execution(GoalStatus.PREEMPTED)
