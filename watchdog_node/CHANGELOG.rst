@@ -2,6 +2,9 @@
 Changelog for package watchdog_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.1.10 (2015-06-09)
 -------------------
 * Fix renamed install target.
