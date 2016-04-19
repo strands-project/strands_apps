@@ -20,8 +20,8 @@ Changelog for package door_pass
 * correct door check node name
 * Contributors: Bruno Lacerda, Nick Hawes
 
-Forthcoming
------------
+0.2.0 (2016-04-19)
+------------------
 * 0.1.12
 * updated changelogs
 * Merge pull request `#44 <https://github.com/strands-project/strands_apps/issues/44>`_ from bfalacerda/indigo-devel
