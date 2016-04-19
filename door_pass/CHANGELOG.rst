@@ -2,6 +2,24 @@
 Changelog for package door_pass
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Merge pull request `#44 <https://github.com/strands-project/strands_apps/issues/44>`_ from bfalacerda/indigo-devel
+  adding wait to the door passing action
+* counting time properly
+* avoid asking to hold the door too many times in a row
+* getting door open result corectly
+* log waits to mongo
+* wait a bit more before trying to go through
+* code clean and asking people going through to hold the door
+* be less conservative on checking if door is open
+* make number of readings to consider door open an argument
+* add extra nodes to launch file
+* door waiting action
+* door wait and pass action
+* correct door check node name
+* Contributors: Bruno Lacerda, Nick Hawes
+
 0.1.11 (2016-04-14)
 -------------------
 

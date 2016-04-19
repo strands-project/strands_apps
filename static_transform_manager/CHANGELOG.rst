@@ -2,6 +2,9 @@
 Changelog for package static_transform_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.1.11 (2016-04-14)
 -------------------
 
