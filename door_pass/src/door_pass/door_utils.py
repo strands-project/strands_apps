@@ -5,9 +5,11 @@ from std_msgs.msg import String
 from sensor_msgs.msg import LaserScan
 from geometry_msgs.msg import Twist, Pose
 from nav_msgs.msg import Path
-from door_pass.msg import DoorCheckStat
-
+from door_pass.msg import DoorCheckStat, DoorWaitStat
 from mongodb_store.message_store import MessageStoreProxy
+from actionlib import SimpleActionClient
+from mary_tts.msg import maryttsAction, maryttsGoal
+
 
 def clamp(value, lower, upper):
     return min(max(lower, value), upper)
@@ -44,8 +46,13 @@ class DoorUtils(object):
         self.new_pose_msg = False
         self.new_scan_msg = False
         
-        self.is_active=False        
-        self.mongo_logger=message_proxy=MessageStoreProxy(collection='door_checks')
+        self.is_active=False
+        self.mongo_logger=message_proxy=MessageStoreProxy(collection='door_stats')
+        self.speaker = SimpleActionClient('/speak', maryttsAction)
+        self.just_spoken=False
+        self.wait_frequency=0.1
+        self.wait_elapsed=0.0
+        
         
     def activate(self):
         self.is_active=True
@@ -106,7 +113,7 @@ class DoorUtils(object):
             self.stop_robot()
 
         
-    def check_door(self, target_pose=None): #assumes robot is facing the door
+    def check_door(self, target_pose=None, n_closed=10, log_to_mongo=True): #assumes robot is facing the door
         if self.is_active:
             robot_pose_sub = rospy.Subscriber("/robot_pose", Pose, self.pose_cb)
             scan_sub = rospy.Subscriber("/scan", LaserScan, self.scan_cb)
@@ -115,7 +122,7 @@ class DoorUtils(object):
             while (not self.new_pose_msg) or (not self.new_scan_msg):
                 rospy.sleep(0.05)
             if target_pose is None:
-                dist_to_goal=2 #use 3m                
+                dist_to_goal=2            
             else:
                 r_x = target_pose.position.x-self.pose_x
                 r_y = target_pose.position.y-self.pose_y
@@ -134,23 +141,69 @@ class DoorUtils(object):
                         open_door_counter=open_door_counter+1
             rospy.loginfo("Front laser door check results. closed_door_counter=" + str(closed_door_counter) + " , open_door_counter=" + str(open_door_counter))                        
             #log result in mongo
-            is_open=closed_door_counter<10
-            try:
-                waypoint=rospy.wait_for_message("/current_node", String, 5)
-                topological_map_name=rospy.get_param("/topological_map_name", "")
-                self.mongo_logger.insert(DoorCheckStat(topological_map_name=topological_map_name,
-                                                       waypoint=waypoint.data,
-                                                       is_open=is_open))
-            except Exception, e:
-                rospy.logwarn("Error logging door check " + str(e))
+            is_open=closed_door_counter<n_closed
+            if log_to_mongo:
+                try:
+                    waypoint=rospy.wait_for_message("/current_node", String, 5)
+                    topological_map_name=rospy.get_param("/topological_map_name", "")
+                    self.mongo_logger.insert(DoorCheckStat(topological_map_name=topological_map_name,
+                                                        waypoint=waypoint.data,
+                                                        is_open=is_open))
+                except Exception, e:
+                    rospy.logwarn("Error logging door check " + str(e))
             return is_open
         else:
             return False
     
-    def pass_door(self, target_pose): #assumes robot is facing the door and the door is open
+    def wait_door(self, wait_timeout, target_pose=None, n_closed=10, log_to_mongo=True, speak=True,consecutive_open_secs=2):
+        self.just_spoken=False
+        open_time=0
+        self.wait_elapsed=0.0
+        wait_timer=rospy.Timer(rospy.Duration(self.wait_frequency), self.wait_timer_cb)
+        while self.is_active and self.wait_elapsed < wait_timeout and abs(open_time-consecutive_open_secs)>(self.wait_frequency/2):
+            rospy.loginfo("Door wait and pass action server calling check door")
+            door_open=self.check_door(target_pose, n_closed, False)
+            if door_open:
+                open_time+=self.wait_frequency
+            else:
+                open_time=0
+            if speak and abs(open_time-self.wait_frequency)<0.01 and not self.just_spoken:
+                speak_timer=rospy.Timer(rospy.Duration(10), self.speak_timer_cb, oneshot=True)
+                self.just_spoken=True
+                self.speaker.send_goal(maryttsGoal(text="Please hold the door!"))
+            rospy.sleep(rospy.Duration(self.wait_frequency))
+        wait_timer.shutdown()
+        if not self.is_active:
+            return False
+      
+        print open_time
+        print consecutive_open_secs
+        opened=(abs(open_time-consecutive_open_secs)<=(self.wait_frequency/2))
+        if log_to_mongo:
+            try:
+                waypoint=rospy.wait_for_message("/current_node", String, 5)
+                topological_map_name=rospy.get_param("/topological_map_name", "")
+                self.mongo_logger.insert(DoorWaitStat(topological_map_name=topological_map_name,
+                                                    waypoint=waypoint.data,
+                                                    opened=opened,
+                                                    wait_time=self.wait_elapsed))
+            except Exception, e:
+                rospy.logwarn("Error logging door check " + str(e))
+        return opened
+        
+    
+    def speak_timer_cb(self, event):
+        self.just_spoken=False
+        
+    def wait_timer_cb(self, event):
+        self.wait_elapsed+=self.wait_frequency
+    
+    def pass_door(self, target_pose, speech=False): #assumes robot is facing the door and the door is open
         if self.is_active:
             robot_pose_sub = rospy.Subscriber("/robot_pose", Pose, self.pose_cb)
             scan_sub = rospy.Subscriber("/scan", LaserScan, self.scan_cb)
+            if speech:
+                self.speaker.send_goal(maryttsGoal(text="I'm going through now."))
             base_cmd=Twist()
             self.new_pose_msg=False
             self.new_scan_msg=False
@@ -172,6 +225,8 @@ class DoorUtils(object):
                 if (dist_to_goal<self.distance_to_success):
                     rospy.loginfo("Close enough to goal pose, door pass success.")
                     self.stop_robot()
+                    if speech:
+                        self.speaker.send_goal(maryttsGoal(text="Great! Thank you for the help."))
                     return True
                 if (prev_dist_to_goal < dist_to_goal):
                     getting_further_counter=getting_further_counter+1

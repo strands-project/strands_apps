@@ -1,0 +1,6 @@
+geometry_msgs/PoseStamped target_pose
+float64 wait_timeout
+---
+bool open
+---
+

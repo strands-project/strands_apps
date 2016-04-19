@@ -38,6 +38,7 @@
   <run_depend>std_msgs</run_depend>
   <run_depend>tf</run_depend>
   <run_depend>mongodb_store</run_depend>
+  <run_depend>mary_tts</run_depend>
 
   <export/>
 </package>

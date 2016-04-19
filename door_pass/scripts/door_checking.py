@@ -31,7 +31,7 @@ class DoorCheck(object):
         rospy.spin()
     
 if __name__ == '__main__':
-    rospy.init_node("door_pass_node")
+    rospy.init_node("door_check_node")
     checker=DoorCheck()
     checker.main()
     
