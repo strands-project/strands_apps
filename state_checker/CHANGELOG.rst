@@ -5,6 +5,12 @@ Changelog for package state_checker
 0.1.12 (2016-04-19)
 -------------------
 
+Forthcoming
+-----------
+* 0.1.12
+* updated changelogs
+* Contributors: Jenkins
+
 0.1.11 (2016-04-14)
 -------------------
 
