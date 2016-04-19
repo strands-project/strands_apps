@@ -20,8 +20,8 @@ Changelog for package door_pass
 * correct door check node name
 * Contributors: Bruno Lacerda, Nick Hawes
 
-Forthcoming
------------
+0.2.1 (2016-04-19)
+------------------
 
 0.2.0 (2016-04-19)
 ------------------
