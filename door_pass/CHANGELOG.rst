@@ -2,8 +2,8 @@
 Changelog for package door_pass
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.12 (2016-04-19)
+-------------------
 * Merge pull request `#44 <https://github.com/strands-project/strands_apps/issues/44>`_ from bfalacerda/indigo-devel
   adding wait to the door passing action
 * counting time properly
