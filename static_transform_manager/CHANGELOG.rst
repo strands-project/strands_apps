@@ -5,6 +5,9 @@ Changelog for package static_transform_manager
 0.1.12 (2016-04-19)
 -------------------
 
+Forthcoming
+-----------
+
 0.2.1 (2016-04-19)
 ------------------
 

@@ -20,6 +20,11 @@ Changelog for package door_pass
 * correct door check node name
 * Contributors: Bruno Lacerda, Nick Hawes
 
+Forthcoming
+-----------
+* Added missing install target
+* Contributors: Nick Hawes
+
 0.2.1 (2016-04-19)
 ------------------
 
