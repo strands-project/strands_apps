@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>door_pass</name>
-  <version>0.1.10</version>
+  <version>0.2.2</version>
   <description>Used to navigate through narrow doors</description>
 
   <maintainer email="tkrajnik@lincoln.ac.uk">gestom</maintainer>
@@ -38,6 +38,7 @@
   <run_depend>std_msgs</run_depend>
   <run_depend>tf</run_depend>
   <run_depend>mongodb_store</run_depend>
+  <run_depend>mary_tts</run_depend>
 
   <export/>
 </package>
