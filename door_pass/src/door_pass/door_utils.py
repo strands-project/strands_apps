@@ -9,6 +9,8 @@ from door_pass.msg import DoorCheckStat, DoorWaitStat
 from mongodb_store.message_store import MessageStoreProxy
 from actionlib import SimpleActionClient
 from mary_tts.msg import maryttsAction, maryttsGoal
+from strands_navigation_msgs.srv import LocalisePose
+
 
 
 def clamp(value, lower, upper):
@@ -47,6 +49,7 @@ class DoorUtils(object):
         self.new_scan_msg = False
         
         self.is_active=False
+        self.get_target_wp_srv=rospy.ServiceProxy("/topological_localisation/localise_pose", LocalisePose)
         self.mongo_logger=message_proxy=MessageStoreProxy(collection='door_stats')
         self.speaker = SimpleActionClient('/speak', maryttsAction)
         self.just_spoken=False
@@ -149,10 +152,15 @@ class DoorUtils(object):
             is_open=closed_door_counter<n_closed
             if log_to_mongo:
                 try:
+                    if target_pose is not None:
+                        target_waypoint=self.get_target_wp_srv(target_pose).current_node
+                    else:
+                        target_waypoint='none'
                     waypoint=rospy.wait_for_message("/current_node", String, 5)
                     topological_map_name=rospy.get_param("/topological_map_name", "")
                     self.mongo_logger.insert(DoorCheckStat(topological_map_name=topological_map_name,
-                                                        waypoint=waypoint.data,
+                                                        source_waypoint=waypoint.data,
+                                                        target_waypoint=target_waypoint,
                                                         is_open=is_open))
                 except Exception, e:
                     rospy.logwarn("Error logging door check " + str(e))
@@ -188,10 +196,15 @@ class DoorUtils(object):
         opened=(abs(open_time-consecutive_open_secs)<=(self.wait_frequency/2))
         if log_to_mongo:
             try:
+                if target_pose is not None:
+                    target_waypoint=self.get_target_wp_srv(target_pose).current_node
+                else:
+                    target_waypoint='none'
                 waypoint=rospy.wait_for_message("/current_node", String, 5)
                 topological_map_name=rospy.get_param("/topological_map_name", "")
                 self.mongo_logger.insert(DoorWaitStat(topological_map_name=topological_map_name,
-                                                    waypoint=waypoint.data,
+                                                    source_waypoint=waypoint.data,
+                                                    target_waypoint=target_waypoint,
                                                     opened=opened,
                                                     wait_time=self.wait_elapsed))
             except Exception, e:
