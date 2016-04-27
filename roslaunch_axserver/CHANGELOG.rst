@@ -2,6 +2,21 @@
 Changelog for package roslaunch_axserver
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.1.12 (2016-04-19)
+-------------------
+
+0.2.2 (2016-04-20)
+------------------
+
+0.2.1 (2016-04-19)
+------------------
+
+0.2.0 (2016-04-19)
+------------------
+* 0.1.12
+* updated changelogs
+* Contributors: Jenkins
+
 0.1.11 (2016-04-14)
 -------------------
 * fixed `#45 <https://github.com/strands-project/strands_apps/issues/45>`_ (`#46 <https://github.com/strands-project/strands_apps/issues/46>`_)
