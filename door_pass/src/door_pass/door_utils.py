@@ -61,7 +61,6 @@ class DoorUtils(object):
         self.is_active=False
     
     def pose_cb(self, msg):
-        self.new_pose_msg=True
         self.pose_x=msg.position.x
         self.pose_y=msg.position.y
         q0 = msg.orientation.x
@@ -69,18 +68,23 @@ class DoorUtils(object):
         q2 =  msg.orientation.z
         q3 =  msg.orientation.w
         self.current_angle = math.atan2(2.*(q0*q1 + q2*q3), 1. - 2.*(q1**2 + q2**2))
+        self.new_pose_msg=True
 
     def scan_cb (self, msg):
-        self.new_scan_msg=True
         self.angle_min=msg.angle_min
         self.angle_max=msg.angle_max
         self.angle_increment=msg.angle_increment
         self.range_min=msg.range_min
         self.range_max=msg.range_max
         self.ranges=msg.ranges
+        self.new_scan_msg=True
+
     
 
     def calculate_angle_diff(self, r_x, r_y):
+        print "RY", r_y
+        print "RX", r_x
+        print "current_angle", self.current_angle
         angle_diff=math.atan2(r_y,r_x)-self.current_angle
         while (angle_diff >= math.pi):
             angle_diff-= 2*math.pi
@@ -107,9 +111,10 @@ class DoorUtils(object):
                         rospy.sleep(0.05)
                     r_x = target_pose.position.x-self.pose_x
                     r_y = target_pose.position.y-self.pose_y
-                    angle_diff=self.calculate_angle_diff(r_x,r_y)               
+                    angle_diff=self.calculate_angle_diff(r_x,r_y)
                     base_cmd.angular.z = angle_diff*0.5;   
                     self.publish_cmd(base_cmd)
+            robot_pose_sub.unregister()
             self.stop_robot()
 
         
@@ -151,6 +156,8 @@ class DoorUtils(object):
                                                         is_open=is_open))
                 except Exception, e:
                     rospy.logwarn("Error logging door check " + str(e))
+            robot_pose_sub.unregister()
+            scan_sub.unregister()
             return is_open
         else:
             return False
@@ -227,6 +234,8 @@ class DoorUtils(object):
                     self.stop_robot()
                     if speech:
                         self.speaker.send_goal(maryttsGoal(text="Great! Thank you for the help."))
+                    robot_pose_sub.unregister()
+                    scan_sub.unregister()
                     return True
                 if (prev_dist_to_goal < dist_to_goal):
                     getting_further_counter=getting_further_counter+1
@@ -237,6 +246,8 @@ class DoorUtils(object):
                 if getting_further_counter > self.getting_further_counter_threshold:
                     rospy.loginfo("Getting too far from the goal. Door pass failure.")
                     self.stop_robot()
+                    robot_pose_sub.unregister()
+                    scan_sub.unregister()
                     return False
                 left_minim=0.4
                 right_minim = 0.4
@@ -264,6 +275,8 @@ class DoorUtils(object):
                 if front_minim<=0:
                     rospy.loginfo("Too close to an obstacle. Aborting.")
                     self.stop_robot()
+                    robot_pose_sub.unregister()
+                    scan_sub.unregister()
                     return False
                 base_cmd.linear.x = self.vel_scale_factor*self.max_trans_vel*front_minim
                 base_cmd.angular.z = self.vel_scale_factor*(left_minim-right_minim)
@@ -273,6 +286,8 @@ class DoorUtils(object):
                 rospy.loginfo("Publishing to cmd_vel: base_cmd.linear.x=" + str(base_cmd.linear.x) + " base_cmd.angular.z=" + str(base_cmd.angular.z))              
                 self.publish_cmd(base_cmd)
             self.stop_robot()
+        robot_pose_sub.unregister()
+        scan_sub.unregister()
         return False
         
     def stop_robot(self):
