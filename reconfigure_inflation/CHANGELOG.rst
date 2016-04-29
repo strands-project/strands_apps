@@ -5,6 +5,9 @@ Changelog for package reconfigure_inflation
 0.1.12 (2016-04-19)
 -------------------
 
+Forthcoming
+-----------
+
 0.2.2 (2016-04-20)
 ------------------
 

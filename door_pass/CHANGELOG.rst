@@ -20,6 +20,16 @@ Changelog for package door_pass
 * correct door check node name
 * Contributors: Bruno Lacerda, Nick Hawes
 
+Forthcoming
+-----------
+* Merge branch 'indigo-devel' of https://github.com/bfalacerda/strands_apps into indigo-devel
+* explicit topic unregistering
+* extend door stats to include source and target wps
+* Merge branch 'indigo-devel' of https://github.com/strands-project/strands_apps into indigo-devel
+* Merge branch 'indigo-devel' of https://github.com/bfalacerda/strands_apps into indigo-devel
+* Merge branch 'indigo-devel' of https://github.com/strands-project/strands_apps into indigo-devel
+* Contributors: Bruno Lacerda, STRANDS
+
 0.2.2 (2016-04-20)
 ------------------
 * Added missing install target
