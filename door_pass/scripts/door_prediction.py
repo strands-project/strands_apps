@@ -1,11 +1,21 @@
 #!/usr/bin/env python
 
 import sys
-import rospy
+import numpy
+import random
 
-from strands_navigation_msgs.msg import TopologicalMap
+import rospy
+import actionlib
+
+from actionlib_msgs.msg import *
+
+
+from door_pass.srv import PredictDoorState
 from mongodb_store.message_store import MessageStoreProxy
+import fremenserver.msg
+from strands_navigation_msgs.msg import TopologicalMap
 from door_pass.msg import DoorWaitStat
+
 
 def usage():
     print "\nFor using all the available stats use:"
@@ -26,22 +36,27 @@ class door_prediction(object):
         self.map_received =False
         self.range = epochs
 
+        self.wait_timeout = rospy.get_param('/door_pass_timeout', 240)
+
         rospy.Subscriber('/topological_map', TopologicalMap, self.MapCallback)
         rospy.loginfo("Waiting for Topological map ...")       
         while not self.map_received:
             rospy.sleep(rospy.Duration(0.1))
-            rospy.loginfo("Waiting for Topological map ...")
         rospy.loginfo("... Got Topological map")
 
-        stats=self.gather_stats()
-        self.extract_doors(stats)
-        
-        self.find_doors()
+        rospy.loginfo("Creating fremen server client.")
+        self.FremenClient= actionlib.SimpleActionClient('fremenserver', fremenserver.msg.FremenAction)
+        self.FremenClient.wait_for_server()
+        rospy.loginfo(" ...done")
+
+        self.predict_srv=rospy.Service('/door_prediction/predict_doors', PredictDoorState, self.predict_door_cb)
+
+        self.create_models()
 
         rospy.loginfo("All Done ...")
         rospy.spin()
 
-      
+
     """
      MapCallback
      
@@ -51,45 +66,150 @@ class door_prediction(object):
         self.top_map = msg
         self.map_received = True
 
-      
+
     """
-     gather_stats
+     create_models
      
-     This function retrieves all the door passing stats
+     This function finds all the doors in the environment 
+     retrieves all the door passing stats,
+     sorts them by door
     """
-    def gather_stats(self):
-        msg_store = MessageStoreProxy(collection='door_stats')
-
-#        query = {}
-        query_meta={}
-#        available = msg_store.query(door_pass.msg.DoorWaitStat._type, query, query_meta)
-        stats=[]
-    
-        available = len(msg_store.query(DoorWaitStat._type, {}, query_meta))
-        if available <= 0 :
-            rospy.logerr("not in datacentre")
-        else:
-            message_list = msg_store.query(DoorWaitStat._type, {}, query_meta)    
-            for i in message_list:
-                print i[0]
-                print "----------------------------"
-                stats.append(i[0])
-
-        return stats            
-
-    """
-     extract_doors
-     
-     This function takes all the stats and sorts them by door in the environment
-    """
-    def extract_doors(self, stats):
-        waypoints=[]
-        for i in stats:
-            if not i.waypoint in waypoints:
-                waypoints.append(i.waypoint)
+    def create_models(self):
+        self.doors =[]                  #Contains statistics per door used to create fremen models
         
-        waypoints.sort()
-        print waypoints
+        self.doors =self.find_doors()   # finds all the doors in the environment
+        stats=self.gather_stats()       # retrieves all the door passing stats
+        self.extract_doors(stats)       # sorts stats by door
+        
+        for i in self.doors:
+            i['order']=self.create_fremen_model(i)
+            print i
+
+    """
+     create_fremen_model
+     
+     This function creates the fremen model for each door
+    """
+    def create_fremen_model(self, door):
+        to_ret={}
+        epochs = [x['epoch'] for x in door['stats']]
+        res = [x['result'] for x in door['stats']]
+        times = [x['time'] for x in door['stats']]
+        print str(len(epochs))+' samples using '+str(int(numpy.ceil(len(epochs)*0.8)))+' for model building'# and '+str(int(numpy.ceil(len(epochs)*0.2)))+' for evaluation'
+
+        # Choosing the samples used for model building and evaluation
+        index_b = sorted(random.sample(xrange(len(epochs)), int(numpy.ceil(len(epochs)*0.8))))
+        index_e = []
+        for i in range(len(epochs)):
+            if i not in index_b:
+                index_e.append(i)
+        
+        if not index_e:
+            index_e = random.sample(xrange(len(epochs)), 1)
+            
+        epochs_build = [ epochs[i] for i in index_b]
+        epochs_eval = [ epochs[i] for i in index_e]
+        res_build = [ res[i] for i in index_b]
+        res_eval = [ res[i] for i in index_e]
+        times_build = [ times[i] for i in index_b]
+        times_eval = [ times[i] for i in index_e]
+        
+        print index_b, epochs_build, res_build, times_build
+        print '---'
+        print index_e, epochs_eval, res_eval, times_eval
+        print '---'
+        print door['model_id']['res']
+        to_ret['res']=self.add_and_eval_models(door['model_id']['res'], epochs_build, res_build, epochs_eval, res_eval)
+        to_ret['time']=self.add_and_eval_value_models(door['model_id']['time'], epochs_build, times_build, epochs_eval, times_eval)
+        print to_ret
+        return to_ret
+
+
+    """
+     add_and_eval_models
+     
+     This function creates and evaluates fremen models for binary states
+     it returns the recommended order for the predictions
+    """
+    def add_and_eval_models(self, model_id, a_epochs, a_states, e_epochs, e_states):
+        fremgoal = fremenserver.msg.FremenGoal()
+        fremgoal.operation = 'add'
+        fremgoal.id = model_id
+        fremgoal.times = a_epochs
+        fremgoal.states = a_states
+        
+        # print "--- BUILD ---"
+        self.FremenClient.send_goal(fremgoal)
+        self.FremenClient.wait_for_result()
+        ps = self.FremenClient.get_result()
+        print ps
+        
+        # print "--- EVALUATE ---"
+        frevgoal = fremenserver.msg.FremenGoal()
+        frevgoal.operation = 'evaluate'
+        frevgoal.id = model_id
+        frevgoal.times = e_epochs
+        frevgoal.states = e_states
+        frevgoal.order = 5
+        
+        self.FremenClient.send_goal(frevgoal)
+        self.FremenClient.wait_for_result()
+        pse = self.FremenClient.get_result()  
+        print pse.errors
+        print "chosen order %d" %pse.errors.index(min(pse.errors))
+        return pse.errors.index(min(pse.errors))
+
+
+    """
+     add_and_eval_value_models
+     
+     This function creates and evaluates fremen models for float values
+     it returns the recommended order for the predictions
+    """
+    def add_and_eval_value_models(self, model_id, a_epochs, a_states, e_epochs, e_states):
+        print a_states
+        fremgoal = fremenserver.msg.FremenGoal()
+        fremgoal.operation = 'addvalues'
+        fremgoal.id = model_id
+        fremgoal.times = a_epochs
+        fremgoal.values = a_states
+        
+        # Sends the goal to the action server.
+        self.FremenClient.send_goal(fremgoal)
+        
+        print "Sending data to fremenserver"
+        
+        
+        # Waits for the server to finish performing the action.
+        self.FremenClient.wait_for_result()
+        
+        print "fremenserver done"
+        
+        # Prints out the result of executing the action
+        ps = self.FremenClient.get_result()
+        print "fremenserver result:"
+        print ps
+        
+        # print "--- EVALUATE ---"
+        frevgoal = fremenserver.msg.FremenGoal()
+        frevgoal.operation = 'evaluate'
+        frevgoal.id = model_id
+        frevgoal.times = e_epochs
+        frevgoal.states = e_states
+        frevgoal.order = 5
+        
+        # Sends the goal to the action server.
+        self.FremenClient.send_goal(frevgoal)
+        
+        # Waits for the server to finish performing the action.
+        self.FremenClient.wait_for_result()
+        
+        # Prints out the result of executing the action
+        pse = self.FremenClient.get_result()  # A FibonacciResult
+        print pse.errors
+        print "chosen order %d" %pse.errors.index(min(pse.errors))
+        return pse.errors.index(min(pse.errors))
+
 
     """
      find_doors
@@ -101,33 +221,135 @@ class door_prediction(object):
         to_pop=[]
         for i in self.top_map.nodes:
             cwp = i.name
+            #For all nodes on the environment find doorpassing actions and create a list of doors 
             for j in i.edges:
-                if j.action == 'door_wait_and_pass':
+                if j.action == 'door_wait_and_pass':    
                     d={}
+                    a = 'door'+'_'+cwp+'_'+j.node+'_res'
+                    b = 'door'+'_'+cwp+'_'+j.node+'_time'
+                    c = cwp+'_'+j.node
+                    d['model_id']={'name':c,'res':a, 'time':b}
+                    d['order']={'state':0, 'time':0}
                     d['nodes']=[]
                     d['nodes'].append(cwp)
                     d['nodes'].append(j.node)
+                    d['stats']=[]
                     doors.append(d)
 
-        print len(doors)
-        print doors        
-        
+        #Find Repeated doors        
         for k in range(len(doors)):
-            print "Looking for", k, doors[k]['nodes'][0], doors[k]['nodes'][1]
             for l in range(k, len(doors)):
                 if k!=l:
-                    print "L", l, doors[l]['nodes']
                     if doors[k]['nodes'][0] in doors[l]['nodes'] and doors[k]['nodes'][1] in doors[l]['nodes'] :
-                        print "POP"
                         to_pop.append(l)
         
+        #Remove Repeated doors
         to_pop.sort()
-        to_pop.reverse()
-        print "TO POP:", to_pop
-        
+        to_pop.reverse()       
         for m in to_pop:
             doors.pop(m)
+            
         print doors
+        return doors
+
+      
+    """
+     gather_stats
+     
+     This function retrieves all the door passing stats
+    """
+    def gather_stats(self):
+        msg_store = MessageStoreProxy(collection='door_stats')
+
+        query = {}
+        query['topological_map_name']= self.top_map.pointset
+        query_meta={}
+        stats=[]
+        
+        #find all the stats for the current topological map
+        message_list = msg_store.query(DoorWaitStat._type, query, query_meta)
+        if len(message_list) <= 0 :
+            rospy.logerr("not in datacentre")
+        else:
+            for i in message_list:
+                stats.append(i)
+        return stats
+
+
+    """
+     extract_doors
+     
+     This function takes all the stats and sorts them by door in the environment
+    """
+    def extract_doors(self, stats):
+        #waypoints=[]
+        for i in stats:
+            for j in self.doors:
+                if i[0].waypoint in j['nodes']:
+                    tstat ={}
+                    if i[0].opened:
+                        tstat['result']=1.0
+                    else:
+                        tstat['result']=0.0
+                    tstat['time']=(i[0].wait_time/(self.wait_timeout+1))
+                    tstat['epoch']=int(i[1]['inserted_at'].strftime('%s'))
+                    j['stats'].append(tstat)
+        
+        total_stats=0
+        for h in self.doors:
+            print "----------"
+            print h['model_id']
+            print 'number of stats:' + str(len(h['stats']))
+            total_stats=total_stats+len(h['stats'])
+        print "----------"
+        print total_stats  
+
+
+    def predict_door_cb(self, req):
+        return self.get_predict(req.epoch.secs)
+
+    def get_predict(self, epoch):
+        print "requesting prediction for time %d" %epoch
+        #edges_ids=[]
+        dur=[]
+        prob=[]
+        
+        dids = [x['model_id']['name'] for x in self.doors]
+        
+        resids = [x['model_id']['res'] for x in self.doors]
+        timids = [x['model_id']['time'] for x in self.doors]
+        resords = [x['order']['res'] for x in self.doors]
+        timords = [x['order']['time'] for x in self.doors]        
+        prob = self.forecast_outcome(epoch, resids, resords)
+        dur2 = self.forecast_outcome(epoch, timids, timords)
+        dur = [rospy.Duration.from_sec(x* self.wait_timeout) for x in dur2]
+        
+        #print resords
+
+        return dids, prob, dur
+
+    def forecast_outcome(self, epoch, mods, ords):
+        print epoch, mods, ords
+        fremgoal = fremenserver.msg.FremenGoal()
+        fremgoal.operation = 'forecast'
+        fremgoal.ids = mods
+        fremgoal.times.append(epoch)
+        
+        fremgoal.order = -1
+        fremgoal.orders = ords
+        
+        self.FremenClient.send_goal(fremgoal)
+        self.FremenClient.wait_for_result(timeout=rospy.Duration(10.0))
+
+#        if self.FremenClient.get_state() == actionlib.GoalStatus.SUCCEEDED:
+        ps = self.FremenClient.get_result()
+        print ps
+        prob = list(ps.probabilities)
+        return prob
+        
+
+
+
 
 if __name__ == '__main__':
     rospy.init_node('door_prediction')
