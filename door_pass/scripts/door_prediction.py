@@ -97,14 +97,19 @@ class door_prediction(object):
         epochs = [x['epoch'] for x in door['stats']]
         res = [x['result'] for x in door['stats']]
         times = [x['time'] for x in door['stats']]
-        print str(len(epochs))+' samples using '+str(int(numpy.ceil(len(epochs)*0.8)))+' for model building'# and '+str(int(numpy.ceil(len(epochs)*0.2)))+' for evaluation'
+        print str(len(epochs))+' samples using '+str(int(numpy.ceil(len(epochs)*0.75)))+' for model building'# and '+str(int(numpy.ceil(len(epochs)*0.2)))+' for evaluation'
 
+        #random sampling
         # Choosing the samples used for model building and evaluation
-        index_b = sorted(random.sample(xrange(len(epochs)), int(numpy.ceil(len(epochs)*0.8))))
-        index_e = []
-        for i in range(len(epochs)):
-            if i not in index_b:
-                index_e.append(i)
+#        index_b = sorted(random.sample(xrange(len(epochs)), int(numpy.ceil(len(epochs)*0.8)))) 
+#        index_e = []
+#        for i in range(len(epochs)):
+#            if i not in index_b:
+#                index_e.append(i)
+
+        #ordered sampling
+        index_b = range(int(numpy.ceil(len(epochs)*0.75)))
+        index_e = range(int(numpy.ceil(len(epochs)*0.75)),len(epochs))
         
         if not index_e:
             index_e = random.sample(xrange(len(epochs)), 1)
@@ -365,8 +370,12 @@ class door_prediction(object):
         dur = [rospy.Duration.from_sec(x* self.wait_timeout) for x in dur2]
         
         #print resords
+        for i in range(len(prob)):
+            if prob[i] <= 0.0:
+                prob[i] = 0.000001
 
         return dids, prob, dur
+
 
     def forecast_outcome(self, epoch, mods, ords):
         print epoch, mods, ords
