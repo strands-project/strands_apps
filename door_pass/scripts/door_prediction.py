@@ -18,7 +18,7 @@ from door_pass.msg import DoorWaitStat
 
 
 def usage():
-    print "\nFor using all the available stats use:"
+    print "\Using all the available stats"
 #    print "\t rosrun topological_navigation topological_prediction.py"
 #    print "For all the stats in a range use:"
 #    print "\t rosrun topological_navigation topological_prediction.py -range from_epoch to_epoch"
@@ -49,9 +49,9 @@ class door_prediction(object):
         self.FremenClient.wait_for_server()
         rospy.loginfo(" ...done")
 
-        self.predict_srv=rospy.Service('/door_prediction/predict_doors', PredictDoorState, self.predict_door_cb)
-
         self.create_models()
+
+        self.predict_srv=rospy.Service('/door_prediction/predict_doors', PredictDoorState, self.predict_door_cb)
 
         rospy.loginfo("All Done ...")
         rospy.spin()
@@ -77,8 +77,10 @@ class door_prediction(object):
     def create_models(self):
         self.doors =[]                  #Contains statistics per door used to create fremen models
         
-        self.doors =self.find_doors()   # finds all the doors in the environment
+#        self.doors =self.find_doors()   # finds all the doors in the environment
+        
         stats=self.gather_stats()       # retrieves all the door passing stats
+        print self.doors
         self.extract_doors(stats)       # sorts stats by door
         
         for i in self.doors:
@@ -176,7 +178,6 @@ class door_prediction(object):
         
         # Sends the goal to the action server.
         self.FremenClient.send_goal(fremgoal)
-        
         print "Sending data to fremenserver"
         
         
@@ -211,61 +212,83 @@ class door_prediction(object):
         return pse.errors.index(min(pse.errors))
 
 
+#    """
+#     find_doors
+#     
+#     This function finds all the doors in the environment using the topological map
+#    """
+#    def find_doors(self):
+#        doors=[]
+#        to_pop=[]
+#        for i in self.top_map.nodes:
+#            cwp = i.name
+#            #For all nodes on the environment find doorpassing actions and create a list of doors 
+#            for j in i.edges:
+#                if j.action == 'door_wait_and_pass':    
+#                    d={}
+#                    a = 'door'+'_'+cwp+'_'+j.node+'_res'
+#                    b = 'door'+'_'+cwp+'_'+j.node+'_time'
+#                    c = cwp+'_'+j.node
+#                    d['model_id']={'name':c,'res':a, 'time':b}
+#                    d['order']={'state':0, 'time':0}
+#                    d['nodes']=[]
+#                    d['nodes'].append(cwp)
+#                    d['nodes'].append(j.node)
+#                    d['stats']=[]
+#                    doors.append(d)
+#
+#        #Find Repeated doors        
+#        for k in range(len(doors)):
+#            for l in range(k, len(doors)):
+#                if k!=l:
+#                    if doors[k]['nodes'][0] in doors[l]['nodes'] and doors[k]['nodes'][1] in doors[l]['nodes'] :
+#                        to_pop.append(l)
+#        
+#        #Remove Repeated doors
+#        to_pop.sort()
+#        to_pop.reverse()       
+#        for m in to_pop:
+#            doors.pop(m)
+#            
+#        print doors
+#        return doors
+
     """
-     find_doors
+     create_new_door
      
-     This function finds all the doors in the environment using the topological map
+     Creates a new door to be appended in the doors list
     """
-    def find_doors(self):
-        doors=[]
-        to_pop=[]
-        for i in self.top_map.nodes:
-            cwp = i.name
-            #For all nodes on the environment find doorpassing actions and create a list of doors 
-            for j in i.edges:
-                if j.action == 'door_wait_and_pass':    
-                    d={}
-                    a = 'door'+'_'+cwp+'_'+j.node+'_res'
-                    b = 'door'+'_'+cwp+'_'+j.node+'_time'
-                    c = cwp+'_'+j.node
-                    d['model_id']={'name':c,'res':a, 'time':b}
-                    d['order']={'state':0, 'time':0}
-                    d['nodes']=[]
-                    d['nodes'].append(cwp)
-                    d['nodes'].append(j.node)
-                    d['stats']=[]
-                    doors.append(d)
-
-        #Find Repeated doors        
-        for k in range(len(doors)):
-            for l in range(k, len(doors)):
-                if k!=l:
-                    if doors[k]['nodes'][0] in doors[l]['nodes'] and doors[k]['nodes'][1] in doors[l]['nodes'] :
-                        to_pop.append(l)
-        
-        #Remove Repeated doors
-        to_pop.sort()
-        to_pop.reverse()       
-        for m in to_pop:
-            doors.pop(m)
-            
-        print doors
-        return doors
-
-      
+    def create_new_door(self, source, target):
+        d={}
+        a = 'door'+'_'+source+'_'+target+'_res'
+        b = 'door'+'_'+source+'_'+target+'_time'
+        c = source+'_'+target
+        d['model_id']={'name':c,'res':a, 'time':b}
+        d['order']={'state':0, 'time':0}
+        d['nodes']=[]
+        d['nodes'].append(source)
+        d['nodes'].append(target)
+        d['stats']=[]
+        return d
+       
+    
     """
      gather_stats
      
      This function retrieves all the door passing stats
+     and finds all the doors in the environment from the stats
     """
     def gather_stats(self):
+        stats=[]
+        doors=[]
+        #to_pop=[]
+        
         msg_store = MessageStoreProxy(collection='door_stats')
 
         query = {}
         query['topological_map_name']= self.top_map.pointset
         query_meta={}
-        stats=[]
-        
+       
         #find all the stats for the current topological map
         message_list = msg_store.query(DoorWaitStat._type, query, query_meta)
         if len(message_list) <= 0 :
@@ -273,6 +296,23 @@ class door_prediction(object):
         else:
             for i in message_list:
                 stats.append(i)
+                #create temporal door models
+                if doors:
+                    found=False
+                    for j in doors:                    
+                        if i[0].source_waypoint in j['nodes'] and i[0].target_waypoint in j['nodes']:
+                            found=True
+                            break
+                    if not found:
+                        d = self.create_new_door(i[0].source_waypoint, i[0].target_waypoint)
+                        doors.append(d)
+                else:
+                    d = self.create_new_door(i[0].source_waypoint, i[0].target_waypoint)
+                    doors.append(d)
+
+        self.doors=doors
+        for l in self.doors:
+            print l['nodes']
         return stats
 
 
@@ -285,7 +325,7 @@ class door_prediction(object):
         #waypoints=[]
         for i in stats:
             for j in self.doors:
-                if i[0].waypoint in j['nodes']:
+                if i[0].source_waypoint in j['nodes'] and i[0].target_waypoint in j['nodes']:
                     tstat ={}
                     if i[0].opened:
                         tstat['result']=1.0
