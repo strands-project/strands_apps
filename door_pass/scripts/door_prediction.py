@@ -9,7 +9,7 @@ import actionlib
 
 from actionlib_msgs.msg import *
 
-
+from threading import Lock
 from door_pass.srv import PredictDoorState
 from mongodb_store.message_store import MessageStoreProxy
 import fremenserver.msg
@@ -19,13 +19,6 @@ from door_pass.msg import DoorWaitStat
 
 def usage():
     print "\Using all the available stats"
-#    print "\t rosrun topological_navigation topological_prediction.py"
-#    print "For all the stats in a range use:"
-#    print "\t rosrun topological_navigation topological_prediction.py -range from_epoch to_epoch"
-#    print "For all the stats from a date until now use:"
-#    print "\t rosrun topological_navigation topological_prediction.py -range from_epoch -1"
-#    print "For all the stats until one date:"
-#    print "\t rosrun topological_navigation topological_prediction.py -range 0 to_epoch"
 
 
 class door_prediction(object):
@@ -35,22 +28,27 @@ class door_prediction(object):
         self.top_map = []
         self.map_received =False
         self.range = epochs
-
+        self.lock = Lock()
         self.wait_timeout = rospy.get_param('/door_pass_timeout', 240)
-
+        
+        # Get Topological Map
         rospy.Subscriber('/topological_map', TopologicalMap, self.MapCallback)
         rospy.loginfo("Waiting for Topological map ...")       
         while not self.map_received:
             rospy.sleep(rospy.Duration(0.1))
         rospy.loginfo("... Got Topological map")
 
-        rospy.loginfo("Creating fremen server client.")
+
+        # Creating fremen server client
+        rospy.loginfo("Creating fremen server client")
         self.FremenClient= actionlib.SimpleActionClient('fremenserver', fremenserver.msg.FremenAction)
         self.FremenClient.wait_for_server()
         rospy.loginfo(" ...done")
 
+        # Create Door models        
         self.create_models()
 
+        #Advertise Service
         self.predict_srv=rospy.Service('/door_prediction/predict_doors', PredictDoorState, self.predict_door_cb)
 
         rospy.loginfo("All Done ...")
@@ -76,16 +74,15 @@ class door_prediction(object):
     """
     def create_models(self):
         self.doors =[]                  #Contains statistics per door used to create fremen models
-        
-#        self.doors =self.find_doors()   # finds all the doors in the environment
-        
+              
         stats=self.gather_stats()       # retrieves all the door passing stats
         print self.doors
         self.extract_doors(stats)       # sorts stats by door
         
         for i in self.doors:
             i['order']=self.create_fremen_model(i)
-            print i
+            print "-------------"
+
 
     """
      create_fremen_model
@@ -96,30 +93,57 @@ class door_prediction(object):
         to_ret={}
         epochs = [x['epoch'] for x in door['stats']]
         res = [x['result'] for x in door['stats']]
-        times = [x['time'] for x in door['stats']]
+        tepochs = [x['epoch'] for x in door['times']]
+        times = [x['time'] for x in door['times']]
+        
         print str(len(epochs))+' samples using '+str(int(numpy.ceil(len(epochs)*0.75)))+' for model building'# and '+str(int(numpy.ceil(len(epochs)*0.2)))+' for evaluation'
 
-        #random sampling
-        # Choosing the samples used for model building and evaluation
-#        index_b = sorted(random.sample(xrange(len(epochs)), int(numpy.ceil(len(epochs)*0.8)))) 
-#        index_e = []
-#        for i in range(len(epochs)):
-#            if i not in index_b:
-#                index_e.append(i)
 
-        #ordered sampling
-        index_b = range(int(numpy.ceil(len(epochs)*0.75)))
-        index_e = range(int(numpy.ceil(len(epochs)*0.75)),len(epochs))
+        # Choosing the samples used for model building and evaluation
+        sampling_type = rospy.get_param('/door_prediction/model_building/sampling_type', 0) #0 for ordered (extrapolation), 1 for random (intrapolation)       
+        if sampling_type == 0:
+            #ordered sampling
+
+            #samples for result sampling
+            index_b = range(int(numpy.ceil(len(epochs)*0.75)))
+            index_e = range(int(numpy.ceil(len(epochs)*0.75)),len(epochs))
+            
+            #samples for time sampling
+            tindex_b = range(int(numpy.ceil(len(tepochs)*0.75)))
+            tindex_e = range(int(numpy.ceil(len(tepochs)*0.75)),len(tepochs))
+        else:
+            #random sampling
         
+           #samples for result sampling        
+            index_b = sorted(random.sample(xrange(len(epochs)), int(numpy.ceil(len(epochs)*0.8)))) 
+            index_e = []
+            for i in range(len(epochs)):
+                if i not in index_b:
+                    index_e.append(i)
+
+            #samples for time sampling
+            tindex_b = sorted(random.sample(xrange(len(tepochs)), int(numpy.ceil(len(tepochs)*0.8)))) 
+            tindex_e = []
+            for i in range(len(tepochs)):
+                if i not in tindex_b:
+                    tindex_e.append(i)
+
+   
         if not index_e:
             index_e = random.sample(xrange(len(epochs)), 1)
+
+        if not tindex_e:
+            tindex_e = random.sample(xrange(len(tepochs)), 1)
             
         epochs_build = [ epochs[i] for i in index_b]
         epochs_eval = [ epochs[i] for i in index_e]
         res_build = [ res[i] for i in index_b]
         res_eval = [ res[i] for i in index_e]
-        times_build = [ times[i] for i in index_b]
-        times_eval = [ times[i] for i in index_e]
+
+        time_epochs_build = [ tepochs[i] for i in tindex_b]
+        time_epochs_eval = [ tepochs[i] for i in tindex_e]
+        times_build = [ times[i] for i in tindex_b]
+        times_eval = [ times[i] for i in tindex_e]
         
         print index_b, epochs_build, res_build, times_build
         print '---'
@@ -127,7 +151,7 @@ class door_prediction(object):
         print '---'
         print door['model_id']['res']
         to_ret['res']=self.add_and_eval_models(door['model_id']['res'], epochs_build, res_build, epochs_eval, res_eval)
-        to_ret['time']=self.add_and_eval_value_models(door['model_id']['time'], epochs_build, times_build, epochs_eval, times_eval)
+        to_ret['time']=self.add_and_eval_value_models(door['model_id']['time'], time_epochs_build, times_build, time_epochs_eval, times_eval)
         print to_ret
         return to_ret
 
@@ -217,47 +241,6 @@ class door_prediction(object):
         return pse.errors.index(min(pse.errors))
 
 
-#    """
-#     find_doors
-#     
-#     This function finds all the doors in the environment using the topological map
-#    """
-#    def find_doors(self):
-#        doors=[]
-#        to_pop=[]
-#        for i in self.top_map.nodes:
-#            cwp = i.name
-#            #For all nodes on the environment find doorpassing actions and create a list of doors 
-#            for j in i.edges:
-#                if j.action == 'door_wait_and_pass':    
-#                    d={}
-#                    a = 'door'+'_'+cwp+'_'+j.node+'_res'
-#                    b = 'door'+'_'+cwp+'_'+j.node+'_time'
-#                    c = cwp+'_'+j.node
-#                    d['model_id']={'name':c,'res':a, 'time':b}
-#                    d['order']={'state':0, 'time':0}
-#                    d['nodes']=[]
-#                    d['nodes'].append(cwp)
-#                    d['nodes'].append(j.node)
-#                    d['stats']=[]
-#                    doors.append(d)
-#
-#        #Find Repeated doors        
-#        for k in range(len(doors)):
-#            for l in range(k, len(doors)):
-#                if k!=l:
-#                    if doors[k]['nodes'][0] in doors[l]['nodes'] and doors[k]['nodes'][1] in doors[l]['nodes'] :
-#                        to_pop.append(l)
-#        
-#        #Remove Repeated doors
-#        to_pop.sort()
-#        to_pop.reverse()       
-#        for m in to_pop:
-#            doors.pop(m)
-#            
-#        print doors
-#        return doors
-
     """
      create_new_door
      
@@ -274,6 +257,7 @@ class door_prediction(object):
         d['nodes'].append(source)
         d['nodes'].append(target)
         d['stats']=[]
+        d['times']=[]        
         return d
        
     
@@ -334,9 +318,12 @@ class door_prediction(object):
                     tstat ={}
                     if i[0].opened:
                         tstat['result']=1.0
+                        tistat={}
+                        tistat['epoch']=int(i[1]['inserted_at'].strftime('%s'))
+                        tistat['time']=(i[0].wait_time/(self.wait_timeout+1))
+                        j['times'].append(tistat)
                     else:
                         tstat['result']=0.0
-                    tstat['time']=(i[0].wait_time/(self.wait_timeout+1))
                     tstat['epoch']=int(i[1]['inserted_at'].strftime('%s'))
                     j['stats'].append(tstat)
         
@@ -351,28 +338,34 @@ class door_prediction(object):
 
 
     def predict_door_cb(self, req):
-        return self.get_predict(req.epoch.secs)
+        with self.lock:
+            return self.get_predict(req.epoch.secs)
 
     def get_predict(self, epoch):
         print "requesting prediction for time %d" %epoch
-        #edges_ids=[]
+
         dur=[]
         prob=[]
         
-        dids = [x['model_id']['name'] for x in self.doors]
+        dids = [x['model_id']['name'] for x in self.doors] #doors ids
+
+        #door_pass outcome forecast
+        resids = [x['model_id']['res'] for x in self.doors]     #door_pass outcome model_id
+        resords = [x['order']['res'] for x in self.doors]       #door_pass outcome model order
+        prob = self.forecast_outcome(epoch, resids, resords)    #door_pass outcome prediction
         
-        resids = [x['model_id']['res'] for x in self.doors]
-        timids = [x['model_id']['time'] for x in self.doors]
-        resords = [x['order']['res'] for x in self.doors]
-        timords = [x['order']['time'] for x in self.doors]        
-        prob = self.forecast_outcome(epoch, resids, resords)
-        dur2 = self.forecast_outcome(epoch, timids, timords)
+        #door_pass time forecast
+        timids = [x['model_id']['time'] for x in self.doors]    #door_pass time model_id
+        timords = [x['order']['time'] for x in self.doors]      #door_pass time model order
+        dur2 = self.forecast_outcome(epoch, timids, timords)    #door_pass time prediction
         dur = [rospy.Duration.from_sec(x* self.wait_timeout) for x in dur2]
         
         #print resords
         for i in range(len(prob)):
             if prob[i] <= 0.0:
                 prob[i] = 0.000001
+            elif prob[i] >= 1.0:
+                prob[i] = 0.999999
 
         return dids, prob, dur
 
