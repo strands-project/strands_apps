@@ -6,12 +6,16 @@ import random
 
 import rospy
 import actionlib
+import time
+
 
 from actionlib_msgs.msg import *
+import door_pass.msg
 
 from threading import Lock
 from door_pass.srv import PredictDoorState
 from mongodb_store.message_store import MessageStoreProxy
+
 import fremenserver.msg
 from strands_navigation_msgs.msg import TopologicalMap
 from door_pass.msg import DoorWaitStat
@@ -23,12 +27,15 @@ def usage():
 
 class door_prediction(object):
 
+    _feedback = door_pass.msg.BuildPredictionFeedback()
+    _result   = door_pass.msg.BuildPredictionResult()
 
     def __init__(self, epochs) :
         self.top_map = []
         self.map_received =False
         self.range = epochs
         self.lock = Lock()
+        action_name = '/door_prediction/build_temporal_model'
         self.wait_timeout = rospy.get_param('/door_pass_timeout', 240)
         
         # Get Topological Map
@@ -37,6 +44,14 @@ class door_prediction(object):
         while not self.map_received:
             rospy.sleep(rospy.Duration(0.1))
         rospy.loginfo("... Got Topological map")
+
+        #Creating Action Server
+        rospy.loginfo("Creating action server.")
+        self._as = actionlib.SimpleActionServer(action_name, door_pass.msg.BuildPredictionAction, execute_cb = self.build_callback, auto_start = False)
+        self._as.register_preempt_callback(self.preempt_callback)
+        rospy.loginfo(" ...starting")
+        self._as.start()
+        rospy.loginfo(" ...done")
 
 
         # Creating fremen server client
@@ -63,6 +78,55 @@ class door_prediction(object):
     def MapCallback(self, msg) :
         self.top_map = msg
         self.map_received = True
+
+
+    """
+     BuildCallBack
+     
+     This Functions is called when the Action Server is called to build the models again
+    """
+    def build_callback(self, goal):
+        self.cancelled = False
+
+        # print goal
+
+        # set epoch ranges based on goal
+        if goal.start_range.secs > 0:
+            self.range[0] = goal.start_range.secs
+        if goal.end_range.secs > 0:
+            self.range[1] = goal.end_range.secs
+
+        rospy.loginfo('Building model for epoch range: %s' % self.range)
+
+        start_time = time.time()  
+        #self.get_list_of_edges()
+        #elapsed_time = time.time() - start_time
+        #self._feedback.result = "%d edges found in %.3f seconds \nGathering stats ..." %(len(self.eids),elapsed_time)
+        #self._as.publish_feedback(self._feedback)
+        #self.gather_stats()        
+        self.create_models()
+        elapsed_time = time.time() - start_time
+        self._feedback.result = "Finished after %.3f seconds" %elapsed_time 
+        self._as.publish_feedback(self._feedback)       #Publish Feedback
+
+        #rospy.loginfo("Finished after %.3f sechttp://9gag.com/gag/aGR3z60onds" %elapsed_time)
+        
+        if not self.cancelled :     
+            self._result.success = True
+            self._as.set_succeeded(self._result)
+        else:
+            self._result.success = False
+            self._as.set_preempted(self._result)
+
+
+    """
+     BuildCallBack
+     
+     This Functions is called when the Action Server is called to build the models again
+    """
+    def preempt_callback(self):
+        self.cancelled = True
+
 
 
     """
