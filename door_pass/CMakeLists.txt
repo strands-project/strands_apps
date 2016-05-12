@@ -42,6 +42,7 @@ add_action_files(
     FILES 
     DoorCheck.action
     DoorWait.action
+    BuildPrediction.action
 )
 
 generate_messages(

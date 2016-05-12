@@ -1,5 +1,6 @@
 import math
 import rospy
+from random import choice
 
 from std_msgs.msg import String
 from sensor_msgs.msg import LaserScan
@@ -9,6 +10,7 @@ from door_pass.msg import DoorCheckStat, DoorWaitStat
 from mongodb_store.message_store import MessageStoreProxy
 from actionlib import SimpleActionClient
 from mary_tts.msg import maryttsAction, maryttsGoal
+import strands_webserver.client_utils as cu
 from strands_navigation_msgs.srv import LocalisePose
 
 
@@ -51,10 +53,25 @@ class DoorUtils(object):
         self.is_active=False
         self.get_target_wp_srv=rospy.ServiceProxy("/topological_localisation/localise_pose", LocalisePose)
         self.mongo_logger=message_proxy=MessageStoreProxy(collection='door_stats')
-        self.speaker = SimpleActionClient('/speak', maryttsAction)
+        self.speaker = SimpleActionClient('/speak', maryttsAction)   
         self.just_spoken=False
         self.wait_frequency=0.1
         self.wait_elapsed=0.0
+        
+
+
+        rospy.loginfo("help via screen got webserver services")
+        self.display_no = rospy.get_param("~display", 0)
+        
+        self.ask_to_hold=["Please hold the door!",
+                          "Can you give me a hand?"]
+        self.going_through=["I'm going through now.",
+                           "Here I go!"]
+        self.thanks=["Great! Thank you for the help.",
+                     "You're so kind!"]
+        
+        self.screen_message="Please hold the door, I need to get to the other side."
+       
         
         
     def activate(self):
@@ -175,6 +192,7 @@ class DoorUtils(object):
         open_time=0
         self.wait_elapsed=0.0
         wait_timer=rospy.Timer(rospy.Duration(self.wait_frequency), self.wait_timer_cb)
+        cu.display_content(self.display_no, self.screen_message)
         while self.is_active and self.wait_elapsed < wait_timeout and abs(open_time-consecutive_open_secs)>(self.wait_frequency/2):
             rospy.loginfo("Door wait and pass action server calling check door")
             door_open=self.check_door(target_pose, n_closed, False)
@@ -185,9 +203,10 @@ class DoorUtils(object):
             if speak and abs(open_time-self.wait_frequency)<0.01 and not self.just_spoken:
                 speak_timer=rospy.Timer(rospy.Duration(10), self.speak_timer_cb, oneshot=True)
                 self.just_spoken=True
-                self.speaker.send_goal(maryttsGoal(text="Please hold the door!"))
+                self.speaker.send_goal(maryttsGoal(text=choice(self.ask_to_hold)))
             rospy.sleep(rospy.Duration(self.wait_frequency))
         wait_timer.shutdown()
+        cu.display_relative_page(self.display_no, 'index.html')
         if not self.is_active:
             return False
       
@@ -223,7 +242,7 @@ class DoorUtils(object):
             robot_pose_sub = rospy.Subscriber("/robot_pose", Pose, self.pose_cb)
             scan_sub = rospy.Subscriber("/scan", LaserScan, self.scan_cb)
             if speech:
-                self.speaker.send_goal(maryttsGoal(text="I'm going through now."))
+                self.speaker.send_goal(maryttsGoal(text=choice(self.going_through)))
             base_cmd=Twist()
             self.new_pose_msg=False
             self.new_scan_msg=False
@@ -246,7 +265,7 @@ class DoorUtils(object):
                     rospy.loginfo("Close enough to goal pose, door pass success.")
                     self.stop_robot()
                     if speech:
-                        self.speaker.send_goal(maryttsGoal(text="Great! Thank you for the help."))
+                        self.speaker.send_goal(maryttsGoal(text=choice(self.thanks)))
                     robot_pose_sub.unregister()
                     scan_sub.unregister()
                     return True
