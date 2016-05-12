@@ -9,7 +9,7 @@ import actionlib
 import time
 
 
-from actionlib_msgs.msg import *
+import std_msgs.msg
 import door_pass.msg
 
 from threading import Lock
@@ -31,6 +31,7 @@ class door_prediction(object):
     _result   = door_pass.msg.BuildPredictionResult()
 
     def __init__(self, epochs) :
+        rospy.on_shutdown(self._on_node_shutdown)
         self.top_map = []
         self.map_received =False
         self.range = epochs
@@ -44,6 +45,7 @@ class door_prediction(object):
         while not self.map_received:
             rospy.sleep(rospy.Duration(0.1))
         rospy.loginfo("... Got Topological map")
+
 
         #Creating Action Server
         rospy.loginfo("Creating action server.")
@@ -66,6 +68,13 @@ class door_prediction(object):
         #Advertise Service
         self.predict_srv=rospy.Service('/door_prediction/predict_doors', PredictDoorState, self.predict_door_cb)
 
+        rospy.loginfo("Set-Up Fremenserver monitors")
+        #Fremen Server Monitor
+        self.fremen_monitor = rospy.Timer(rospy.Duration(10), self.monitor_cb)
+        # Subscribe to fremen server start topic
+        rospy.Subscriber('/fremenserver_start', std_msgs.msg.Bool, self.fremen_restart_cb)
+        rospy.loginfo("... Done")
+
         rospy.loginfo("All Done ...")
         rospy.spin()
 
@@ -80,43 +89,51 @@ class door_prediction(object):
         self.map_received = True
 
 
+    def fremen_restart_cb(self, msg) :
+        if msg.data:
+            rospy.logwarn("FREMENSERVER restart detected will generate new models now")
+            with self.lock:
+                self.create_models()
+            
+
     """
      BuildCallBack
      
      This Functions is called when the Action Server is called to build the models again
     """
     def build_callback(self, goal):
-        self.cancelled = False
-
-        # print goal
-
-        # set epoch ranges based on goal
-        if goal.start_range.secs > 0:
-            self.range[0] = goal.start_range.secs
-        if goal.end_range.secs > 0:
-            self.range[1] = goal.end_range.secs
-
-        rospy.loginfo('Building model for epoch range: %s' % self.range)
-
-        start_time = time.time()  
-        #self.get_list_of_edges()
-        #elapsed_time = time.time() - start_time
-        #self._feedback.result = "%d edges found in %.3f seconds \nGathering stats ..." %(len(self.eids),elapsed_time)
-        #self._as.publish_feedback(self._feedback)
-        #self.gather_stats()        
-        self.create_models()
-        elapsed_time = time.time() - start_time
-        self._feedback.result = "Finished after %.3f seconds" %elapsed_time 
-        self._as.publish_feedback(self._feedback)       #Publish Feedback
-
-        #rospy.loginfo("Finished after %.3f sechttp://9gag.com/gag/aGR3z60onds" %elapsed_time)
-        
-        if not self.cancelled :     
-            self._result.success = True
-            self._as.set_succeeded(self._result)
-        else:
-            self._result.success = False
-            self._as.set_preempted(self._result)
+        with self.lock:
+            self.cancelled = False
+    
+            # print goal
+    
+            # set epoch ranges based on goal
+            if goal.start_range.secs > 0:
+                self.range[0] = goal.start_range.secs
+            if goal.end_range.secs > 0:
+                self.range[1] = goal.end_range.secs
+    
+            rospy.loginfo('Building model for epoch range: %s' % self.range)
+    
+            start_time = time.time()  
+            #self.get_list_of_edges()
+            #elapsed_time = time.time() - start_time
+            #self._feedback.result = "%d edges found in %.3f seconds \nGathering stats ..." %(len(self.eids),elapsed_time)
+            #self._as.publish_feedback(self._feedback)
+            #self.gather_stats()        
+            self.create_models()
+            elapsed_time = time.time() - start_time
+            self._feedback.result = "Finished after %.3f seconds" %elapsed_time 
+            self._as.publish_feedback(self._feedback)       #Publish Feedback
+    
+            #rospy.loginfo("Finished after %.3f sechttp://9gag.com/gag/aGR3z60onds" %elapsed_time)
+            
+            if not self.cancelled :     
+                self._result.success = True
+                self._as.set_succeeded(self._result)
+            else:
+                self._result.success = False
+                self._as.set_preempted(self._result)
 
 
     """
@@ -452,10 +469,20 @@ class door_prediction(object):
         print ps
         prob = list(ps.probabilities)
         return prob
-        
 
 
+    """
+     monitor_cb
+     
+     This function monitors if fremenserver is still active
+    """
+    def monitor_cb(self, events) :
+        if not self.FremenClient.wait_for_server(timeout = rospy.Duration(1)):
+            rospy.logerr("NO FREMEN SERVER FOUND. Fremenserver restart might be required")
 
+
+    def _on_node_shutdown(self):
+        self.fremen_monitor.shutdown()
 
 if __name__ == '__main__':
     rospy.init_node('door_prediction')
