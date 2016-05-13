@@ -63,7 +63,7 @@ class door_prediction(object):
         rospy.loginfo(" ...done")
 
         # Create Door models        
-        self.create_models()
+        #self.create_models() not needed anymore its done on fremen_restart_cb
 
         #Advertise Service
         self.predict_srv=rospy.Service('/door_prediction/predict_doors', PredictDoorState, self.predict_door_cb)
