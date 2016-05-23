@@ -159,17 +159,80 @@ class door_prediction(object):
      sorts them by door
     """
     def create_models(self):
-        self.unknowns=[]                #Contains model ids without statistics
+        #self.unknowns=[]                #Contains model ids without statistics
         self.doors =[]                  #Contains statistics per door used to create fremen models
               
         stats=self.gather_stats()       # retrieves all the door passing stats
-        print self.doors
+#        print "++++++++++++++"
+        self.unknowns=self.find_doors()
+#        print self.unknowns
+#        print "++++++++++++++"
+        #print self.doors
         self.extract_doors(stats)       # sorts stats by door
         
         for i in self.doors:
             i['order']=self.create_fremen_model(i)
             #print "-------------"
 
+        print "Modelled Doors:"
+        for i in self.doors:
+            print i['model_id']['name']
+        print "Unknown Doors:"
+        for i in self.unknowns:
+            print i['name']
+
+
+    """
+     find_doors
+     
+     This function finds all the doors in the environment using the topological map
+    """
+    def find_doors(self):
+        doors=[]
+        to_pop=[]
+        for i in self.top_map.nodes:
+            cwp = i.name
+            #For all nodes on the environment find doorpassing actions and create a list of doors 
+            for j in i.edges:
+                if j.action == 'door_wait_and_pass':    
+                    d={}
+                    a = 'door'+'_'+cwp+'_'+j.node+'_res'
+                    b = 'door'+'_'+cwp+'_'+j.node+'_time'
+                    c = cwp+'_'+j.node
+                    d['model_id']={'name':c,'res':a, 'time':b}
+#                    d['order']={'state':0, 'time':0}
+                    d['nodes']=[]
+                    d['nodes'].append(cwp)
+                    d['nodes'].append(j.node)
+#                    d['stats']=[]
+                    doors.append(d)
+
+        #Find Repeated doors        
+        for k in range(len(doors)):
+            for l in range(k, len(doors)):
+                if k!=l:
+                    if doors[k]['nodes'][0] in doors[l]['nodes'] and doors[k]['nodes'][1] in doors[l]['nodes'] :
+                        to_pop.append(l)
+        
+        #Remove Repeated doors
+        to_pop.sort()
+        to_pop.reverse()       
+        for m in to_pop:
+            doors.pop(m)
+
+        to_pop=[]
+        for k in range(len(doors)):
+            for i in self.doors:
+                if doors[k]['nodes'][0] in i['nodes'] and doors[k]['nodes'][1] in i['nodes'] :
+                    to_pop.append(k)        
+
+        to_pop.sort()
+        to_pop.reverse()       
+        for m in to_pop:
+            doors.pop(m)        
+        
+        udoors=[x['model_id'] for x in doors]
+        return udoors
 
     """
      create_fremen_model
@@ -380,7 +443,7 @@ class door_prediction(object):
         #find all the stats for the current topological map
         message_list = msg_store.query(DoorWaitStat._type, query, query_meta)
         if len(message_list) <= 0 :
-            rospy.logerr("not in datacentre")
+            rospy.logerr("NO stats in datacentre. All doors will be found from map")
         else:
             for i in message_list:
                 stats.append(i)
@@ -399,8 +462,8 @@ class door_prediction(object):
                     doors.append(d)
 
         self.doors=doors
-        for l in self.doors:
-            print l['nodes']
+#        for l in self.doors:
+#            print l['nodes']
         return stats
 
 
@@ -426,14 +489,14 @@ class door_prediction(object):
                     tstat['epoch']=int(i[1]['inserted_at'].strftime('%s'))
                     j['stats'].append(tstat)
         
-        total_stats=0
-        for h in self.doors:
-            print "----------"
-            print h['model_id']
-            print 'number of stats:' + str(len(h['stats']))
-            total_stats=total_stats+len(h['stats'])
-        print "----------"
-        print total_stats  
+#        total_stats=0
+#        for h in self.doors:
+#            print "----------"
+#            print h['model_id']
+#            print 'number of stats:' + str(len(h['stats']))
+#            total_stats=total_stats+len(h['stats'])
+#        print "----------"
+#        print total_stats  
 
 
     def predict_door_cb(self, req):
@@ -443,26 +506,28 @@ class door_prediction(object):
     def get_predict(self, epoch):
         rospy.loginfo("requesting prediction for time %d" %epoch)
 
+        dids=[]
         dur=[]
         prob=[]
 
-#        print self.unknowns
-        unknowndoor = [x['name'] for x in self.unknowns]
+        if len(self.doors)>0:
+        #        print self.unknowns
+            unknowndoor = [x['name'] for x in self.unknowns]
+            
+            dids = [x['model_id']['name'] for x in self.doors if x['model_id']['name'] not in unknowndoor] #doors ids
         
-        dids = [x['model_id']['name'] for x in self.doors if x['model_id']['name'] not in unknowndoor] #doors ids
-
-        #door_pass outcome forecast
-        unknowndoor = [x['res'] for x in self.unknowns]
-        resids = [x['model_id']['res'] for x in self.doors if x['model_id']['res'] not in unknowndoor]     #door_pass outcome model_id
-        resords = [x['order']['res'] for x in self.doors if x['model_id']['res'] not in unknowndoor]       #door_pass outcome model order
-        prob = self.forecast_outcome(epoch, resids, resords)    #door_pass outcome prediction
-        
-        unknowndoor = [x['time'] for x in self.unknowns]
-        #door_pass time forecast
-        timids = [x['model_id']['time'] for x in self.doors if x['model_id']['time'] not in unknowndoor]    #door_pass time model_id
-        timords = [x['order']['time'] for x in self.doors if x['model_id']['time'] not in unknowndoor]      #door_pass time model order
-        dur2 = self.forecast_outcome(epoch, timids, timords)    #door_pass time prediction
-        dur = [rospy.Duration.from_sec(x* self.wait_timeout) for x in dur2]
+            #door_pass outcome forecast
+            unknowndoor = [x['res'] for x in self.unknowns]
+            resids = [x['model_id']['res'] for x in self.doors if x['model_id']['res'] not in unknowndoor]     #door_pass outcome model_id
+            resords = [x['order']['res'] for x in self.doors if x['model_id']['res'] not in unknowndoor]       #door_pass outcome model order
+            prob = self.forecast_outcome(epoch, resids, resords)    #door_pass outcome prediction
+            
+            unknowndoor = [x['time'] for x in self.unknowns]
+            #door_pass time forecast
+            timids = [x['model_id']['time'] for x in self.doors if x['model_id']['time'] not in unknowndoor]    #door_pass time model_id
+            timords = [x['order']['time'] for x in self.doors if x['model_id']['time'] not in unknowndoor]      #door_pass time model order
+            dur2 = self.forecast_outcome(epoch, timids, timords)    #door_pass time prediction
+            dur = [rospy.Duration.from_sec(x* self.wait_timeout) for x in dur2]
         
 
         for i in self.unknowns:
@@ -481,7 +546,7 @@ class door_prediction(object):
 
 
     def forecast_outcome(self, epoch, mods, ords):
-        print epoch, mods, ords
+        #print epoch, mods, ords
         fremgoal = fremenserver.msg.FremenGoal()
         fremgoal.operation = 'forecast'
         fremgoal.ids = mods
@@ -495,7 +560,7 @@ class door_prediction(object):
 
 #        if self.FremenClient.get_state() == actionlib.GoalStatus.SUCCEEDED:
         ps = self.FremenClient.get_result()
-        print ps
+        #print ps
         prob = list(ps.probabilities)
         return prob
 
