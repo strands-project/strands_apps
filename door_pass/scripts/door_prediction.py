@@ -89,7 +89,12 @@ class door_prediction(object):
         self.map_received = True
 
 
-    def fremen_restart_cb(self, msg) :
+    """
+     fremen_start_cb
+     
+     This function creates the models when the fremenserver is started
+    """
+    def fremen_restart_cb(self, msg):
         if msg.data:
             rospy.logwarn("FREMENSERVER restart detected will generate new models now")
             with self.lock:
@@ -154,6 +159,7 @@ class door_prediction(object):
      sorts them by door
     """
     def create_models(self):
+        self.unknowns=[]                #Contains model ids without statistics
         self.doors =[]                  #Contains statistics per door used to create fremen models
               
         stats=self.gather_stats()       # retrieves all the door passing stats
@@ -162,7 +168,7 @@ class door_prediction(object):
         
         for i in self.doors:
             i['order']=self.create_fremen_model(i)
-            print "-------------"
+            #print "-------------"
 
 
     """
@@ -176,64 +182,76 @@ class door_prediction(object):
         res = [x['result'] for x in door['stats']]
         tepochs = [x['epoch'] for x in door['times']]
         times = [x['time'] for x in door['times']]
-        
-        print str(len(epochs))+' samples using '+str(int(numpy.ceil(len(epochs)*0.75)))+' for model building'# and '+str(int(numpy.ceil(len(epochs)*0.2)))+' for evaluation'
-
-
-        # Choosing the samples used for model building and evaluation
-        sampling_type = rospy.get_param('/door_prediction/model_building/sampling_type', 0) #0 for ordered (extrapolation), 1 for random (intrapolation)       
-        if sampling_type == 0:
-            #ordered sampling
-
-            #samples for result sampling
-            index_b = range(int(numpy.ceil(len(epochs)*0.75)))
-            index_e = range(int(numpy.ceil(len(epochs)*0.75)),len(epochs))
-            
-            #samples for time sampling
-            tindex_b = range(int(numpy.ceil(len(tepochs)*0.75)))
-            tindex_e = range(int(numpy.ceil(len(tepochs)*0.75)),len(tepochs))
+               
+        if len(tepochs)>0 and len(epochs):
+            create_models=True
+            #print 'Times: '+str(len(tepochs))+' samples using '+str(int(numpy.ceil(len(tepochs)*0.75)))+' for model building'# and '+str(int(numpy.ceil(len(epochs)*0.2)))+' for evaluation'
+            #print 'Pass: '+str(len(epochs))+' samples using '+str(int(numpy.ceil(len(epochs)*0.75)))+' for model building'# and '+str(int(numpy.ceil(len(epochs)*0.2)))+' for evaluation'
         else:
-            #random sampling
-        
-           #samples for result sampling        
-            index_b = sorted(random.sample(xrange(len(epochs)), int(numpy.ceil(len(epochs)*0.8)))) 
-            index_e = []
-            for i in range(len(epochs)):
-                if i not in index_b:
-                    index_e.append(i)
+            create_models=False
+            rospy.logwarn("No MODELS created for %s, as there are no success stats for this door yet. It will be treated as unknown" %door['model_id']['res'])
+            self.unknowns.append(door['model_id'])
 
-            #samples for time sampling
-            tindex_b = sorted(random.sample(xrange(len(tepochs)), int(numpy.ceil(len(tepochs)*0.8)))) 
-            tindex_e = []
-            for i in range(len(tepochs)):
-                if i not in tindex_b:
-                    tindex_e.append(i)
-
-   
-        if not index_e:
-            index_e = random.sample(xrange(len(epochs)), 1)
-
-        if not tindex_e:
-            tindex_e = random.sample(xrange(len(tepochs)), 1)
+        if create_models:
+            # Choosing the samples used for model building and evaluation
+            sampling_type = rospy.get_param('/door_prediction/model_building/sampling_type', 0) #0 for ordered (extrapolation), 1 for random (intrapolation)       
+            if sampling_type == 0:
+                #ordered sampling
+    
+                #samples for result sampling
+                index_b = range(int(numpy.ceil(len(epochs)*0.75)))
+                index_e = range(int(numpy.ceil(len(epochs)*0.75)),len(epochs))
+                
+                #samples for time sampling
+                tindex_b = range(int(numpy.ceil(len(tepochs)*0.75)))
+                tindex_e = range(int(numpy.ceil(len(tepochs)*0.75)),len(tepochs))
+            else:
+                #random sampling
             
-        epochs_build = [ epochs[i] for i in index_b]
-        epochs_eval = [ epochs[i] for i in index_e]
-        res_build = [ res[i] for i in index_b]
-        res_eval = [ res[i] for i in index_e]
+               #samples for result sampling        
+                index_b = sorted(random.sample(xrange(len(epochs)), int(numpy.ceil(len(epochs)*0.8)))) 
+                index_e = []
+                for i in range(len(epochs)):
+                    if i not in index_b:
+                        index_e.append(i)
 
-        time_epochs_build = [ tepochs[i] for i in tindex_b]
-        time_epochs_eval = [ tepochs[i] for i in tindex_e]
-        times_build = [ times[i] for i in tindex_b]
-        times_eval = [ times[i] for i in tindex_e]
-        
-        print index_b, epochs_build, res_build, times_build
-        print '---'
-        print index_e, epochs_eval, res_eval, times_eval
-        print '---'
-        print door['model_id']['res']
-        to_ret['res']=self.add_and_eval_models(door['model_id']['res'], epochs_build, res_build, epochs_eval, res_eval)
-        to_ret['time']=self.add_and_eval_value_models(door['model_id']['time'], time_epochs_build, times_build, time_epochs_eval, times_eval)
-        print to_ret
+                #samples for time sampling
+                tindex_b = sorted(random.sample(xrange(len(tepochs)), int(numpy.ceil(len(tepochs)*0.8)))) 
+                tindex_e = []
+                for i in range(len(tepochs)):
+                    if i not in tindex_b:
+                        tindex_e.append(i)
+
+       
+            if not index_e:
+                index_e = random.sample(xrange(len(epochs)), 1)
+
+            if not tindex_e:
+                tindex_e = random.sample(xrange(len(tepochs)), 1)
+                
+            epochs_build = [ epochs[i] for i in index_b]
+            epochs_eval = [ epochs[i] for i in index_e]
+            res_build = [ res[i] for i in index_b]
+            res_eval = [ res[i] for i in index_e]
+            to_ret['res']=self.add_and_eval_models(door['model_id']['res'], epochs_build, res_build, epochs_eval, res_eval)
+    
+
+            time_epochs_build = [ tepochs[i] for i in tindex_b]
+            time_epochs_eval = [ tepochs[i] for i in tindex_e]
+            times_build = [ times[i] for i in tindex_b]
+            times_eval = [ times[i] for i in tindex_e]
+            to_ret['time']=self.add_and_eval_value_models(door['model_id']['time'], time_epochs_build, times_build, time_epochs_eval, times_eval)
+            
+            #print index_b, epochs_build, res_build, times_build
+            #print '---'
+            #print index_e, epochs_eval, res_eval, times_eval
+            #print '---'
+            #print door['model_id']['res']
+            #print to_ret
+
+        else:
+            to_ret={}
+
         return to_ret
 
 
@@ -254,7 +272,7 @@ class door_prediction(object):
         self.FremenClient.send_goal(fremgoal)
         self.FremenClient.wait_for_result()
         ps = self.FremenClient.get_result()
-        print ps
+        #print ps
         
         # print "--- EVALUATE ---"
         frevgoal = fremenserver.msg.FremenGoal()
@@ -267,8 +285,8 @@ class door_prediction(object):
         self.FremenClient.send_goal(frevgoal)
         self.FremenClient.wait_for_result()
         pse = self.FremenClient.get_result()  
-        print pse.errors
-        print "chosen order %d" %pse.errors.index(min(pse.errors))
+        #print pse.errors
+        #print "chosen order %d" %pse.errors.index(min(pse.errors))
         return pse.errors.index(min(pse.errors))
 
 
@@ -279,7 +297,7 @@ class door_prediction(object):
      it returns the recommended order for the predictions
     """
     def add_and_eval_value_models(self, model_id, a_epochs, a_states, e_epochs, e_states):
-        print a_states
+        #print a_states
         fremgoal = fremenserver.msg.FremenGoal()
         fremgoal.operation = 'addvalues'
         fremgoal.id = model_id
@@ -288,18 +306,18 @@ class door_prediction(object):
         
         # Sends the goal to the action server.
         self.FremenClient.send_goal(fremgoal)
-        print "Sending data to fremenserver"
+        #print "Sending data to fremenserver"
         
         
         # Waits for the server to finish performing the action.
         self.FremenClient.wait_for_result()
         
-        print "fremenserver done"
+        #print "fremenserver done"
         
         # Prints out the result of executing the action
         ps = self.FremenClient.get_result()
-        print "fremenserver result:"
-        print ps
+        #print "fremenserver result:"
+        #print ps
         
         # print "--- EVALUATE ---"
         frevgoal = fremenserver.msg.FremenGoal()
@@ -317,8 +335,8 @@ class door_prediction(object):
         
         # Prints out the result of executing the action
         pse = self.FremenClient.get_result()  # A FibonacciResult
-        print pse.errors
-        print "chosen order %d" %pse.errors.index(min(pse.errors))
+        #print pse.errors
+        #print "chosen order %d" %pse.errors.index(min(pse.errors))
         return pse.errors.index(min(pse.errors))
 
 
@@ -423,23 +441,34 @@ class door_prediction(object):
             return self.get_predict(req.epoch.secs)
 
     def get_predict(self, epoch):
-        print "requesting prediction for time %d" %epoch
+        rospy.loginfo("requesting prediction for time %d" %epoch)
 
         dur=[]
         prob=[]
+
+#        print self.unknowns
+        unknowndoor = [x['name'] for x in self.unknowns]
         
-        dids = [x['model_id']['name'] for x in self.doors] #doors ids
+        dids = [x['model_id']['name'] for x in self.doors if x['model_id']['name'] not in unknowndoor] #doors ids
 
         #door_pass outcome forecast
-        resids = [x['model_id']['res'] for x in self.doors]     #door_pass outcome model_id
-        resords = [x['order']['res'] for x in self.doors]       #door_pass outcome model order
+        unknowndoor = [x['res'] for x in self.unknowns]
+        resids = [x['model_id']['res'] for x in self.doors if x['model_id']['res'] not in unknowndoor]     #door_pass outcome model_id
+        resords = [x['order']['res'] for x in self.doors if x['model_id']['res'] not in unknowndoor]       #door_pass outcome model order
         prob = self.forecast_outcome(epoch, resids, resords)    #door_pass outcome prediction
         
+        unknowndoor = [x['time'] for x in self.unknowns]
         #door_pass time forecast
-        timids = [x['model_id']['time'] for x in self.doors]    #door_pass time model_id
-        timords = [x['order']['time'] for x in self.doors]      #door_pass time model order
+        timids = [x['model_id']['time'] for x in self.doors if x['model_id']['time'] not in unknowndoor]    #door_pass time model_id
+        timords = [x['order']['time'] for x in self.doors if x['model_id']['time'] not in unknowndoor]      #door_pass time model order
         dur2 = self.forecast_outcome(epoch, timids, timords)    #door_pass time prediction
         dur = [rospy.Duration.from_sec(x* self.wait_timeout) for x in dur2]
+        
+
+        for i in self.unknowns:
+            dids.append(i['name'])
+            prob.append(0.5)
+            dur.append(rospy.Duration.from_sec(self.wait_timeout/2))
         
         #print resords
         for i in range(len(prob)):
