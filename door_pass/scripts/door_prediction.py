@@ -46,7 +46,6 @@ class door_prediction(object):
             rospy.sleep(rospy.Duration(0.1))
         rospy.loginfo("... Got Topological map")
 
-
         #Creating Action Server
         rospy.loginfo("Creating action server.")
         self._as = actionlib.SimpleActionServer(action_name, door_pass.msg.BuildPredictionAction, execute_cb = self.build_callback, auto_start = False)
@@ -54,7 +53,6 @@ class door_prediction(object):
         rospy.loginfo(" ...starting")
         self._as.start()
         rospy.loginfo(" ...done")
-
 
         # Creating fremen server client
         rospy.loginfo("Creating fremen server client")
@@ -120,7 +118,7 @@ class door_prediction(object):
     
             rospy.loginfo('Building model for epoch range: %s' % self.range)
     
-            start_time = time.time()  
+            start_time = time.time()
             #self.get_list_of_edges()
             #elapsed_time = time.time() - start_time
             #self._feedback.result = "%d edges found in %.3f seconds \nGathering stats ..." %(len(self.eids),elapsed_time)
@@ -148,7 +146,6 @@ class door_prediction(object):
     """
     def preempt_callback(self):
         self.cancelled = True
-
 
 
     """
