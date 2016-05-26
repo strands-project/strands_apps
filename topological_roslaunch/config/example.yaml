@@ -1,0 +1,9 @@
+- nodes: [ChargingPoint, ChargingPoint2]
+  tear_down:
+  - pkg: mongodb_store
+    launch_file: mongodb_store.launch
+    parameters: [db_path]
+    values: [/Users/nah/code/datacentres/tsc_sim]   
+  - pkg: task_executor
+    launch_file: mdp-executor.launch
+ 
