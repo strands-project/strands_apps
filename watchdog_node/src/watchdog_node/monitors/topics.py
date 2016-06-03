@@ -52,6 +52,41 @@ class TopicAlive(MonitorType):
             self._validity_timer = Timer((self.max_duration - duration).to_sec(),
                                          self.timout_cb)
             self._validity_timer.start()
+
+
+class TopicAliveInterval(TopicAlive):
+    name = "TopicAliveInterval"
+    description = ("This monitor triggers the actions if there are no messages"
+                   " on the given topic for a given period, but only checks over an interval")
+    config_keys = [('topic', "The topic to monitor"),
+                   ('max_duration', "The maximum number of seconds to accept "
+                    "not receiving a message"),
+                    ('monitor_duration', "The number of seconds to monitor for"),
+                    ('monitor_interval', "The number of seconds to wait between monitoring"),
+                   ]
+    
+    def __init__(self, monitor_config, invalid_cb):
+        super(TopicAliveInterval, self).__init__(monitor_config, invalid_cb)
+        self._monitor_duration = rospy.Duration(self.monitor_duration)
+        self._monitor_interval = rospy.Duration(self.monitor_interval)
+        self._monitor_timer = None        
+
+    def start(self):
+        rospy.loginfo('Starting interval')
+        super(TopicAliveInterval, self).start()        
+        self._monitor_timer = Timer(self._monitor_duration.to_sec(), self._end_interval)
+        self._monitor_timer.start()
+
+    def _end_interval(self):
+        rospy.loginfo('Ending interval')
+        super(TopicAliveInterval, self).stop()
+        self._monitor_timer = Timer(self._monitor_interval.to_sec(), self.start)
+        self._monitor_timer.start()        
+
+    def stop(self):
+        super(TopicAliveInterval, self).stop()
+        if self._monitor_timer is not None:
+            self._monitor_timer.cancel()            
         
 class TopicPublished(MonitorType):
     name = "TopicPublished"
