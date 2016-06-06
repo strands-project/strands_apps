@@ -39,6 +39,7 @@
   <run_depend>tf</run_depend>
   <run_depend>mongodb_store</run_depend>
   <run_depend>mary_tts</run_depend>
+  <run_depend>robot_talk</run_depend>
 
   <export/>
 </package>
