@@ -1,6 +1,7 @@
 import math
 import rospy
-from random import choice
+
+from robot_talk.proxy import RobotTalkProxy
 
 from std_msgs.msg import String
 from sensor_msgs.msg import LaserScan
@@ -62,13 +63,17 @@ class DoorUtils(object):
 
         rospy.loginfo("help via screen got webserver services")
         self.display_no = rospy.get_param("~display", 0)
+
         
-        self.ask_to_hold=["Please hold the door!",
-                          "Can you give me a hand?"]
-        self.going_through=["I'm going through now.",
-                           "Here I go!"]
-        self.thanks=["Great! Thank you for the help.",
-                     "You're so kind!"]
+        self.talk_proxy = RobotTalkProxy('robot_talk')
+        # using topics 'door_pass_ask', 'door_pass_going', and 'door_pass_thanks' 
+        
+        #self.ask_to_hold=["Please hold the door!",
+        #                  "Can you give me a hand?"]
+        #self.going_through=["I'm going through now.",
+        #                   "Here I go!"]
+        #self.thanks=["Great! Thank you for the help.",
+        #             "You're so kind!"]
         
         self.screen_message="Please hold the door, I need to get to the other side."
        
@@ -203,7 +208,7 @@ class DoorUtils(object):
             if speak and abs(open_time-self.wait_frequency)<0.01 and not self.just_spoken:
                 speak_timer=rospy.Timer(rospy.Duration(10), self.speak_timer_cb, oneshot=True)
                 self.just_spoken=True
-                self.speaker.send_goal(maryttsGoal(text=choice(self.ask_to_hold)))
+                self.speaker.send_goal(maryttsGoal(text=self.talk_proxy.get_random_text("door_pass_ask")))
             rospy.sleep(rospy.Duration(self.wait_frequency))
         wait_timer.shutdown()
         cu.display_relative_page(self.display_no, 'index.html')
@@ -242,7 +247,7 @@ class DoorUtils(object):
             robot_pose_sub = rospy.Subscriber("/robot_pose", Pose, self.pose_cb)
             scan_sub = rospy.Subscriber("/scan", LaserScan, self.scan_cb)
             if speech:
-                self.speaker.send_goal(maryttsGoal(text=choice(self.going_through)))
+                self.speaker.send_goal(maryttsGoal(text=self.talk_proxy.get_random_text("door_pass_going")))
             base_cmd=Twist()
             self.new_pose_msg=False
             self.new_scan_msg=False
@@ -265,7 +270,7 @@ class DoorUtils(object):
                     rospy.loginfo("Close enough to goal pose, door pass success.")
                     self.stop_robot()
                     if speech:
-                        self.speaker.send_goal(maryttsGoal(text=choice(self.thanks)))
+                        self.speaker.send_goal(maryttsGoal(text=self.talk_proxy.get_random_text("door_pass_thanks")))
                     robot_pose_sub.unregister()
                     scan_sub.unregister()
                     return True

@@ -9,14 +9,14 @@ from door_pass.door_utils import DoorUtils
    
 class DoorWaitAndPass(object):
     def __init__(self):
-        max_trans_vel=rospy.get_param("~/max_trans_vel", 0.15)
-        max_rot_vel=rospy.get_param("~/max_rot_vel", 0.4)
-        vel_scale_factor=rospy.get_param("~/vel_scale_factor", 2)
-        base_radius=rospy.get_param("~/base_radius", 0.31)
-        getting_further_counter_threshold=rospy.get_param("~/getting_further_counter_threshold", 5)
-        distance_to_success=rospy.get_param("~/distance_to_success", 0.2)
-        self.wait_timeout=rospy.get_param("~/wait_timeout", 60)
-        self.stand_alone=rospy.get_param("~/do_waiting", False)
+        max_trans_vel=rospy.get_param("~max_trans_vel", 0.15)
+        max_rot_vel=rospy.get_param("~max_rot_vel", 0.4)
+        vel_scale_factor=rospy.get_param("~vel_scale_factor", 2)
+        base_radius=rospy.get_param("~base_radius", 0.31)
+        getting_further_counter_threshold=rospy.get_param("~getting_further_counter_threshold", 5)
+        distance_to_success=rospy.get_param("~distance_to_success", 0.2)
+        self.wait_timeout=rospy.get_param("~wait_timeout", 60)
+        self.stand_alone=rospy.get_param("~do_waiting", False)
         
         self.door_utils=DoorUtils(max_trans_vel=max_trans_vel,
                                   max_rot_vel=max_rot_vel,
@@ -42,12 +42,12 @@ class DoorWaitAndPass(object):
 
     def execute_cb(self, goal):
         self.door_utils.activate()
-        max_trans_vel=rospy.get_param("~/max_trans_vel", 0.15)
-        max_rot_vel=rospy.get_param("~/max_rot_vel", 0.4)
-        vel_scale_factor=rospy.get_param("~/vel_scale_factor", 2)
-        base_radius=rospy.get_param("~/base_radius", 0.31)
-        getting_further_counter_threshold=rospy.get_param("~/getting_further_counter_threshold", 5)
-        distance_to_success=rospy.get_param("~/distance_to_success", 0.2)        
+        max_trans_vel=rospy.get_param("~max_trans_vel", 0.15)
+        max_rot_vel=rospy.get_param("~max_rot_vel", 0.4)
+        vel_scale_factor=rospy.get_param("~vel_scale_factor", 2)
+        base_radius=rospy.get_param("~base_radius", 0.31)
+        getting_further_counter_threshold=rospy.get_param("~getting_further_counter_threshold", 5)
+        distance_to_success=rospy.get_param("~distance_to_success", 0.2)        
         self.door_utils.set_params(max_trans_vel=max_trans_vel,
                                   max_rot_vel=max_rot_vel,
                                   vel_scale_factor=vel_scale_factor,
