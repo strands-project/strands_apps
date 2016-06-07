@@ -2,8 +2,8 @@
 Changelog for package topological_roslaunch
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.2.4 (2016-06-07)
+------------------
 * Add node to trigger roslaunch_axserver based on topological node (`#55 <https://github.com/strands-project/strands_apps/issues/55>`_)
   * Adding skeleton of topological_roslaunch node.
   * Basic tear-down at node setup working

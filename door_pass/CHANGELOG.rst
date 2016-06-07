@@ -20,8 +20,8 @@ Changelog for package door_pass
 * correct door check node name
 * Contributors: Bruno Lacerda, Nick Hawes
 
-Forthcoming
------------
+0.2.4 (2016-06-07)
+------------------
 * sorting out for release and cleaning up hopefully unnecessary import whicih was messing up other imports
 * tested and adjusted door passing
 * use robot talk interface for speech
