@@ -20,6 +20,27 @@ Changelog for package door_pass
 * correct door check node name
 * Contributors: Bruno Lacerda, Nick Hawes
 
+Forthcoming
+-----------
+* sorting out for release and cleaning up hopefully unnecessary import whicih was messing up other imports
+* tested and adjusted door passing
+* use robot talk interface for speech
+* test commit
+* Making sure predictions work when no stats are found
+* Less prints managing unknown doors prediction
+* Avoid double model creation on start-up
+* Making sure models are rebuilt when fremen server is restarted
+* add door prediction to launch file
+* adding build temporal model action
+* adding lock, using only successful passes for time modelling, maximum probability now 0.999999
+* show hold the door request on the screen
+* randomised speech for door pass
+* changing sampling strategy and avoiding 0.0 probability
+* adapting door prediction to new message format
+* adding service for door prediction
+* door prediction skeleton with door extraction
+* Contributors: Bruno Lacerda, Jaime Pulido Fentanes, Lars Kunze, Nick Hawes, jailander
+
 0.2.3 (2016-04-29)
 ------------------
 * Merge branch 'indigo-devel' of https://github.com/bfalacerda/strands_apps into indigo-devel

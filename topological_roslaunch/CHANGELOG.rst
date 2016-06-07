@@ -1,12 +1,22 @@
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Changelog for package static_transform_manager
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-0.1.12 (2016-04-19)
--------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Changelog for package topological_roslaunch
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Forthcoming
 -----------
+* Add node to trigger roslaunch_axserver based on topological node (`#55 <https://github.com/strands-project/strands_apps/issues/55>`_)
+  * Adding skeleton of topological_roslaunch node.
+  * Basic tear-down at node setup working
+  * Updated deps
+  * Fixed setup.py and added install
+* Contributors: Nick Hawes
+
+* Add node to trigger roslaunch_axserver based on topological node (`#55 <https://github.com/strands-project/strands_apps/issues/55>`_)
+  * Adding skeleton of topological_roslaunch node.
+  * Basic tear-down at node setup working
+  * Updated deps
+  * Fixed setup.py and added install
+* Contributors: Nick Hawes
 
 0.2.3 (2016-04-29)
 ------------------
@@ -14,16 +24,19 @@ Forthcoming
 0.2.2 (2016-04-20)
 ------------------
 
-0.2.1 (2016-04-19)
-------------------
+0.2.1 (2016-04-19 08:30:51)
+---------------------------
 
-0.2.0 (2016-04-19)
-------------------
-* 0.1.12
-* updated changelogs
-* Contributors: Jenkins
+0.2.0 (2016-04-19 08:30:22)
+---------------------------
+
+0.1.12 (2016-04-19 08:30:13)
+----------------------------
 
 0.1.11 (2016-04-14)
+-------------------
+
+0.1.10 (2015-06-09)
 -------------------
 
 0.1.9 (2015-04-28)
@@ -34,19 +47,12 @@ Forthcoming
 
 0.1.7 (2015-04-17)
 ------------------
-* Add is_ok flag to StopTransformation response.
-* Contributors: Chris Burbridge
 
 0.1.6 (2015-04-12)
 ------------------
-* Fix import bug.
-* Contributors: Chris Burbridge
 
 0.1.5 (2015-03-31)
 ------------------
-* homogenised version numbers
-* New static_transform_manager package.
-* Contributors: Chris Burbridge, Marc Hanheide
 
 0.1.4 (2015-03-19)
 ------------------

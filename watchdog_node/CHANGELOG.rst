@@ -5,6 +5,12 @@ Changelog for package watchdog_node
 0.1.12 (2016-04-19)
 -------------------
 
+Forthcoming
+-----------
+* Added an new monitor which only subscribes to a topic at an interval to perform checks.
+  This closes `#53 <https://github.com/strands-project/strands_apps/issues/53>`_.
+* Contributors: Nick Hawes
+
 0.2.3 (2016-04-29)
 ------------------
 
