@@ -173,7 +173,7 @@ class TopicRate(MonitorType):
         self.msg_times = collections.deque(maxlen = self.buffer_size)
         
     def start(self):
-        self._validity_timer = Timer(10, self.timeout_cb)
+        self._validity_timer = Timer(60, self.timeout_cb)
         self._topic_sub = None
         self._retry_timer = None
         MsgClass, topic, _func = rostopic.get_topic_class(self.topic)
@@ -207,7 +207,7 @@ class TopicRate(MonitorType):
                 self.set_invalid()
             else:
                 rospy.loginfo('Rate of %s is %.2f' % (self.topic, rate))
-                self._validity_timer = Timer(10, self.timeout_cb)
+                self._validity_timer = Timer(60, self.timeout_cb)
                 self._validity_timer.start()
             
 
