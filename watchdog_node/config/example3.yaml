@@ -1,0 +1,13 @@
+- name: String rate watchdog
+  description: Monitors the rate of a string topic
+  restart_timeout: 60
+  monitors:
+      - monitor_type: TopicRateInterval
+        topic: /test
+        min_rate: 5
+        buffer_size: 10
+        monitor_duration: 60
+        monitor_interval: 10
+  actions:
+      - action_type: KillNode
+        node_name: /rostopic

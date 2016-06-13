@@ -1,0 +1,34 @@
+- name: check_head_cam
+  description: Monitors the head camera topic for messages
+  restart_timeout: 60
+  monitors:
+      - monitor_type: TopicAliveInterval
+        topic: /head_xtion/rgb/image_mono
+        max_duration: 5
+        monitor_duration: 10
+        monitor_interval: 600
+  actions:
+      - action_type: KillNode
+        node_name: /head_xtion/head_xtion_nodelet_manager
+      - action_type: KillNode
+        node_name: /replicator_node
+      - action_type: SendEmail
+        to_addresses:  [strands-bham@cs.bham.ac.uk]
+        from_address: n.a.hawes@cs.bham.ac.uk
+        message: "Warning: Betty's head camera nodes have been restarted"
+        server: mail-relay.cs.bham.ac.uk
+        port: 25
+- name: check_battery
+  description: Monitors the battery level.
+  restart_timeout: 30
+  monitors:
+      - monitor_type: TopicFieldCondition
+        topic: /battery_state/lifePercent
+        condition: "{value} < 40"
+  actions:
+      - action_type: SendEmail
+        to_addresses:  [strands-bham@cs.bham.ac.uk]
+        from_address: n.a.hawes@cs.bham.ac.uk
+        message: "Warning: robot battery is critically low."
+        server: mail-relay.cs.bham.ac.uk
+        port: 25
