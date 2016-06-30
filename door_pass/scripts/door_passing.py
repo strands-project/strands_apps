@@ -8,12 +8,13 @@ from door_pass.door_utils import DoorUtils
    
 class DoorPass(object):
     def __init__(self):
-        max_trans_vel=rospy.get_param("~/max_trans_vel", 0.15)
-        max_rot_vel=rospy.get_param("~/max_rot_vel", 0.4)
-        vel_scale_factor=rospy.get_param("~/vel_scale_factor", 2)
-        base_radius=rospy.get_param("~/base_radius", 0.31)
-        getting_further_counter_threshold=rospy.get_param("~/getting_further_counter_threshold", 5)
-        distance_to_success=rospy.get_param("~/distance_to_success", 0.2)
+        max_trans_vel=rospy.get_param("~max_trans_vel", 0.15)
+        max_rot_vel=rospy.get_param("~max_rot_vel", 0.4)
+        vel_scale_factor=rospy.get_param("~vel_scale_factor", 2)
+        base_radius=rospy.get_param("~base_radius", 0.31)
+        getting_further_counter_threshold=rospy.get_param("~getting_further_counter_threshold", 5)
+        distance_to_success=rospy.get_param("~distance_to_success", 0.2)
+        self.log_checks = rospy.get_param("~log_checks", False)
         self.door_utils=DoorUtils(max_trans_vel=max_trans_vel,
                                   max_rot_vel=max_rot_vel,
                                   vel_scale_factor=vel_scale_factor,
@@ -40,12 +41,12 @@ class DoorPass(object):
 
     def execute_cb(self, goal):
         self.door_utils.activate()
-        max_trans_vel=rospy.get_param("~/max_trans_vel", 0.15)
-        max_rot_vel=rospy.get_param("~/max_rot_vel", 0.4)
-        vel_scale_factor=rospy.get_param("~/vel_scale_factor", 2)
-        base_radius=rospy.get_param("~/base_radius", 0.31)
-        getting_further_counter_threshold=rospy.get_param("~/getting_further_counter_threshold", 5)
-        distance_to_success=rospy.get_param("~/distance_to_success", 0.2)        
+        max_trans_vel=rospy.get_param("~max_trans_vel", 0.15)
+        max_rot_vel=rospy.get_param("~max_rot_vel", 0.4)
+        vel_scale_factor=rospy.get_param("~vel_scale_factor", 2)
+        base_radius=rospy.get_param("~base_radius", 0.31)
+        getting_further_counter_threshold=rospy.get_param("~getting_further_counter_threshold", 5)
+        distance_to_success=rospy.get_param("~distance_to_success", 0.2)        
         self.door_utils.set_params(max_trans_vel=max_trans_vel,
                                   max_rot_vel=max_rot_vel,
                                   vel_scale_factor=vel_scale_factor,
@@ -60,7 +61,7 @@ class DoorPass(object):
             self.finish_execution(GoalStatus.PREEMPTED)
             return
         rospy.loginfo("Door pass action server calling check door")
-        door_open=self.door_utils.check_door(target_pose)
+        door_open=self.door_utils.check_door(target_pose, log_to_mongo = self.log_checks)
         if self.door_as.is_preempt_requested():
             self.finish_execution(GoalStatus.PREEMPTED)
             return
