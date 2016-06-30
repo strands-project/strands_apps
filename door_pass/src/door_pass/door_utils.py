@@ -8,12 +8,14 @@ from sensor_msgs.msg import LaserScan
 from geometry_msgs.msg import Twist, Pose
 from nav_msgs.msg import Path
 from door_pass.msg import DoorCheckStat, DoorWaitStat
+from std_srvs.srv import Empty
 from mongodb_store.message_store import MessageStoreProxy
 from actionlib import SimpleActionClient
+from actionlib_msgs.msg import GoalStatus
 from mary_tts.msg import maryttsAction, maryttsGoal
+from move_base_msgs.msg import MoveBaseAction
 import strands_webserver.client_utils as cu
 from strands_navigation_msgs.srv import LocalisePose
-
 
 
 def clamp(value, lower, upper):
@@ -344,7 +346,34 @@ class DoorUtils(object):
             cmd = new_cmd
             rospy.loginfo("Publishing to cmd_vel: base_cmd.linear.x=" + str(cmd.linear.x) + " cmd.angular.z=" + str(cmd.angular.z))
             self.cmd_vel_pub.publish(cmd)
-        
+     
+     
+    def move_base_pass(self, goal):
+        if self.is_active:
+            mb_client = SimpleActionClient("/move_base", MoveBaseAction)
+            mb_client.wait_for_server()
+            self.clear_costmaps()
+            self.speaker.send_goal(maryttsGoal(text=self.talk_proxy.get_random_text("door_pass_going")))
+            mb_client.send_goal(goal)
+            while self.is_active and not mb_client.wait_for_result(rospy.Duration(0.1)):
+                continue
+            if not self.is_active:
+                mb_client.cancel_all_goals()
+            status = mb_client.get_state()
+            if status == GoalStatus.SUCCEEDED:
+                self.speaker.send_goal(maryttsGoal(text=self.talk_proxy.get_random_text("door_pass_thanks")))
+            return status
+        else:
+            return GoalStatus.ABORTED 
+     
+    def clear_costmaps(self):
+        try:
+            rospy.wait_for_service('move_base/clear_costmaps', timeout=5)
+            clear_costmaps = rospy.ServiceProxy('move_base/clear_costmaps', Empty)
+            clear_costmaps()
+        except Exception, e:
+            rospy.logwarn('Exception on clear service call: %s' % e) 
+     
     def set_params(self,
                   max_trans_vel=None,
                   max_rot_vel=None,

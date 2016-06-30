@@ -5,7 +5,6 @@ import actionlib
 from actionlib_msgs.msg import GoalStatusArray, GoalStatus
 from move_base_msgs.msg import MoveBaseAction
 from door_pass.door_utils import DoorUtils
-from std_srvs.srv import Empty, EmptyResponse
    
 class DoorWaitAndMoveBase(object):
     def __init__(self):
@@ -29,9 +28,6 @@ class DoorWaitAndMoveBase(object):
                                   n_closed_door = n_closed_door)
         
         self.mon_nav_status_sub=rospy.Subscriber("/monitored_navigation/status", GoalStatusArray, self.mon_nav_status_cb)
-        self.mb_client = actionlib.SimpleActionClient("/move_base", MoveBaseAction)
-        self.mb_client.wait_for_server()
-        
         
         self.door_as=actionlib.SimpleActionServer('door_wait_and_move_base', MoveBaseAction, execute_cb = self.execute_cb, auto_start=False) 
         self.door_as.start()
@@ -46,14 +42,6 @@ class DoorWaitAndMoveBase(object):
                 break
         self.mon_nav_executing=result
 
-
-    def clear_costmaps(self):
-        try:
-            rospy.wait_for_service('move_base/clear_costmaps', timeout=5)
-            clear_costmaps = rospy.ServiceProxy('move_base/clear_costmaps', Empty)
-            clear_costmaps()
-        except Exception, e:
-            rospy.logwarn('Exception on clear service call: %s' % e)
 
     def execute_cb(self, goal):
         self.door_utils.activate()
@@ -79,15 +67,13 @@ class DoorWaitAndMoveBase(object):
 
         if opened:
             rospy.loginfo("The door is open. Door wait and move base action server is calling move base")
-            self.clear_costmaps()
-            self.mb_client.send_goal(goal)
-            self.mb_client.wait_for_result()
+                        
+            status = self.door_utils.move_base_pass(goal)
                         
             if self.door_as.is_preempt_requested():
                 self.finish_execution(GoalStatus.PREEMPTED)
                 return
             else:
-                status = self.mb_client.get_state()
                 self.finish_execution(status)
                 return
         else:
