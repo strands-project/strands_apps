@@ -12,7 +12,7 @@ class DoorCheck(object):
         rospy.loginfo("Door check action server initialised")
         
     def execute_cb(self, goal):
-        n_closed_door = rospy.get_param("~n_closed_door", 40)
+        n_closed_door = rospy.get_param("~n_closed_door", 20)
         door_utils=DoorUtils(max_trans_vel=0,
                                   max_rot_vel=0,
                                   vel_scale_factor=0,

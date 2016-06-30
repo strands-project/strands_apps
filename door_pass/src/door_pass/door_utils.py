@@ -166,7 +166,7 @@ class DoorUtils(object):
                 angle = self.angle_min+i*self.angle_increment
                 d = self.ranges[i]
                 x = d*math.cos(angle)+0.07
-                if (angle> -0.26 and angle < 0.26):                            
+                if (angle> -0.16 and angle < 0.16):                            
                     if (x < dist_to_goal):
                         closed_door_counter=closed_door_counter+1
                     else:

@@ -5,7 +5,7 @@ import actionlib
 from actionlib_msgs.msg import GoalStatusArray, GoalStatus
 from move_base_msgs.msg import MoveBaseAction
 from door_pass.door_utils import DoorUtils
-
+from std_srvs.srv import Empty, EmptyResponse
    
 class DoorWaitAndMoveBase(object):
     def __init__(self):
@@ -15,7 +15,7 @@ class DoorWaitAndMoveBase(object):
         base_radius=rospy.get_param("~base_radius", 0.31)
         getting_further_counter_threshold=rospy.get_param("~getting_further_counter_threshold", 5)
         distance_to_success=rospy.get_param("~distance_to_success", 0.2)
-        n_closed_door=rospy.get_param("~n_closed_door", 40)
+        n_closed_door=rospy.get_param("~n_closed_door", 20)
         self.wait_timeout=rospy.get_param("~wait_timeout", 60)
         self.stand_alone=rospy.get_param("~do_waiting", False)
           
@@ -46,6 +46,15 @@ class DoorWaitAndMoveBase(object):
                 break
         self.mon_nav_executing=result
 
+
+    def clear_costmaps(self):
+        try:
+            rospy.wait_for_service('move_base/clear_costmaps', timeout=5)
+            clear_costmaps = rospy.ServiceProxy('move_base/clear_costmaps', Empty)
+            clear_costmaps()
+        except Exception, e:
+            rospy.logwarn('Exception on clear service call: %s' % e)
+
     def execute_cb(self, goal):
         self.door_utils.activate()
         n_closed_door=rospy.get_param("~n_closed_door", 40)  
@@ -61,7 +70,7 @@ class DoorWaitAndMoveBase(object):
         if self.stand_alone:
             consecutive_open_secs=2.5
         else:
-            consecutive_open_secs=0.1
+            consecutive_open_secs=1.5
         opened=self.door_utils.wait_door(self.wait_timeout, target_pose, False, self.stand_alone, consecutive_open_secs)
         
         if self.door_as.is_preempt_requested():
@@ -70,7 +79,7 @@ class DoorWaitAndMoveBase(object):
 
         if opened:
             rospy.loginfo("The door is open. Door wait and move base action server is calling move base")
-            
+            self.clear_costmaps()
             self.mb_client.send_goal(goal)
             self.mb_client.wait_for_result()
                         

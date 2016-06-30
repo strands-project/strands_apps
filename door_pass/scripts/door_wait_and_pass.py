@@ -15,7 +15,7 @@ class DoorWaitAndPass(object):
         base_radius=rospy.get_param("~base_radius", 0.31)
         getting_further_counter_threshold=rospy.get_param("~getting_further_counter_threshold", 5)
         distance_to_success=rospy.get_param("~distance_to_success", 0.2)
-        n_closed_door=rospy.get_param("~n_closed_door", 40)
+        n_closed_door=rospy.get_param("~n_closed_door", 20)
         self.wait_timeout=rospy.get_param("~wait_timeout", 60)
         self.stand_alone=rospy.get_param("~do_waiting", False)
           
