@@ -8,19 +8,22 @@ from door_pass.door_utils import DoorUtils
    
 class DoorWait(object):
     def __init__(self):
-        max_trans_vel=rospy.get_param("~/max_trans_vel", 0.15)
-        max_rot_vel=rospy.get_param("~/max_rot_vel", 0.4)
-        vel_scale_factor=rospy.get_param("~/vel_scale_factor", 2)
-        base_radius=rospy.get_param("~/base_radius", 0.31)
-        getting_further_counter_threshold=rospy.get_param("~/getting_further_counter_threshold", 5)
-        distance_to_success=rospy.get_param("~/distance_to_success", 0.2)
+        max_trans_vel=rospy.get_param("~max_trans_vel", 0.15)
+        max_rot_vel=rospy.get_param("~max_rot_vel", 0.4)
+        vel_scale_factor=rospy.get_param("~vel_scale_factor", 2)
+        base_radius=rospy.get_param("~base_radius", 0.31)
+        getting_further_counter_threshold=rospy.get_param("~getting_further_counter_threshold", 5)
+        distance_to_success=rospy.get_param("~distance_to_success", 0.2)
+        n_closed_door=rospy.get_param("~n_closed_door", 40)  
+        
         
         self.door_utils=DoorUtils(max_trans_vel=max_trans_vel,
                                   max_rot_vel=max_rot_vel,
                                   vel_scale_factor=vel_scale_factor,
                                   base_radius=base_radius,
                                   getting_further_counter_threshold=getting_further_counter_threshold,
-                                  distance_to_success=distance_to_success)
+                                  distance_to_success=distance_to_success,
+                                  n_closed_door = n_closed_door)
         
         
         self.door_as=actionlib.SimpleActionServer('door_wait', DoorWaitAction, execute_cb = self.execute_cb, auto_start=False) 
@@ -43,7 +46,8 @@ class DoorWait(object):
                                   vel_scale_factor=vel_scale_factor,
                                   base_radius=base_radius,
                                   getting_further_counter_threshold=getting_further_counter_threshold,
-                                  distance_to_success=distance_to_success)
+                                  distance_to_success=distance_to_success,
+                                  n_closed_door = n_closed_door)
         
         target_pose=goal.target_pose.pose
         wait_timeout=goal.wait_timeout

@@ -15,15 +15,19 @@ class DoorWaitAndPass(object):
         base_radius=rospy.get_param("~base_radius", 0.31)
         getting_further_counter_threshold=rospy.get_param("~getting_further_counter_threshold", 5)
         distance_to_success=rospy.get_param("~distance_to_success", 0.2)
+        n_closed_door=rospy.get_param("~n_closed_door", 40)
         self.wait_timeout=rospy.get_param("~wait_timeout", 60)
         self.stand_alone=rospy.get_param("~do_waiting", False)
+          
+
         
         self.door_utils=DoorUtils(max_trans_vel=max_trans_vel,
                                   max_rot_vel=max_rot_vel,
                                   vel_scale_factor=vel_scale_factor,
                                   base_radius=base_radius,
                                   getting_further_counter_threshold=getting_further_counter_threshold,
-                                  distance_to_success=distance_to_success)
+                                  distance_to_success=distance_to_success,
+                                  n_closed_door = n_closed_door)
         
         self.mon_nav_status_sub=rospy.Subscriber("/monitored_navigation/status", GoalStatusArray, self.mon_nav_status_cb)
         
@@ -47,13 +51,15 @@ class DoorWaitAndPass(object):
         vel_scale_factor=rospy.get_param("~vel_scale_factor", 2)
         base_radius=rospy.get_param("~base_radius", 0.31)
         getting_further_counter_threshold=rospy.get_param("~getting_further_counter_threshold", 5)
-        distance_to_success=rospy.get_param("~distance_to_success", 0.2)        
+        distance_to_success=rospy.get_param("~distance_to_success", 0.2)
+        n_closed_door=rospy.get_param("~n_closed_door", 40)  
         self.door_utils.set_params(max_trans_vel=max_trans_vel,
                                   max_rot_vel=max_rot_vel,
                                   vel_scale_factor=vel_scale_factor,
                                   base_radius=base_radius,
                                   getting_further_counter_threshold=getting_further_counter_threshold,
-                                  distance_to_success=distance_to_success)
+                                  distance_to_success=distance_to_success,
+                                  n_closed_door = n_closed_door)
         
         target_pose=goal.target_pose.pose
         rospy.loginfo("Door wait and pass action server calling rotate towards pose")
@@ -66,7 +72,7 @@ class DoorWaitAndPass(object):
             consecutive_open_secs=2.5
         else:
             consecutive_open_secs=0.1
-        opened=self.door_utils.wait_door(self.wait_timeout, target_pose, 40, False, self.stand_alone, consecutive_open_secs)
+        opened=self.door_utils.wait_door(self.wait_timeout, target_pose, False, self.stand_alone, consecutive_open_secs)
         
         if self.door_as.is_preempt_requested():
             self.finish_execution(GoalStatus.PREEMPTED)
