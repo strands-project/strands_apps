@@ -40,7 +40,8 @@ class DoorWait(object):
         vel_scale_factor=rospy.get_param("~/vel_scale_factor", 2)
         base_radius=rospy.get_param("~/base_radius", 0.31)
         getting_further_counter_threshold=rospy.get_param("~/getting_further_counter_threshold", 5)
-        distance_to_success=rospy.get_param("~/distance_to_success", 0.2)        
+        distance_to_success=rospy.get_param("~/distance_to_success", 0.2)
+        n_closed_door=rospy.get_param("~n_closed_door", 40)
         self.door_utils.set_params(max_trans_vel=max_trans_vel,
                                   max_rot_vel=max_rot_vel,
                                   vel_scale_factor=vel_scale_factor,
