@@ -8,12 +8,14 @@ from sensor_msgs.msg import LaserScan
 from geometry_msgs.msg import Twist, Pose
 from nav_msgs.msg import Path
 from door_pass.msg import DoorCheckStat, DoorWaitStat
+from std_srvs.srv import Empty
 from mongodb_store.message_store import MessageStoreProxy
 from actionlib import SimpleActionClient
+from actionlib_msgs.msg import GoalStatus
 from mary_tts.msg import maryttsAction, maryttsGoal
+from move_base_msgs.msg import MoveBaseAction
 import strands_webserver.client_utils as cu
 from strands_navigation_msgs.srv import LocalisePose
-
 
 
 def clamp(value, lower, upper):
@@ -27,13 +29,15 @@ class DoorUtils(object):
                  vel_scale_factor,
                  base_radius,
                  getting_further_counter_threshold,
-                 distance_to_success):
+                 distance_to_success,
+                 n_closed_door):
         self.max_trans_vel=max_trans_vel
         self.max_rot_vel=max_rot_vel
         self.vel_scale_factor=vel_scale_factor
         self.base_radius=base_radius
         self.getting_further_counter_threshold=getting_further_counter_threshold #limit of number of consecutive  poses getting further away from the goal to output with 'aborted'
         self.distance_to_success=distance_to_success #once the robot is less than this value from the goal, it stops with success
+        self.n_closed_door=n_closed_door #number of laser readings less than the distance to goal in order to classify a door as closed
         self.cmd_vel_pub = rospy.Publisher("/cmd_vel", Twist, queue_size=1)
         self.last_twist = None
 
@@ -143,7 +147,7 @@ class DoorUtils(object):
             self.stop_robot()
 
         
-    def check_door(self, target_pose=None, n_closed=10, log_to_mongo=True): #assumes robot is facing the door
+    def check_door(self, target_pose=None, log_to_mongo=True): #assumes robot is facing the door
         if self.is_active:
             robot_pose_sub = rospy.Subscriber("/robot_pose", Pose, self.pose_cb)
             scan_sub = rospy.Subscriber("/scan", LaserScan, self.scan_cb)
@@ -164,14 +168,14 @@ class DoorUtils(object):
                 angle = self.angle_min+i*self.angle_increment
                 d = self.ranges[i]
                 x = d*math.cos(angle)+0.07
-                if (angle> -0.26 and angle < 0.26):                            
+                if (angle> -0.16 and angle < 0.16):                            
                     if (x < dist_to_goal):
                         closed_door_counter=closed_door_counter+1
                     else:
                         open_door_counter=open_door_counter+1
             rospy.loginfo("Front laser door check results. closed_door_counter=" + str(closed_door_counter) + " , open_door_counter=" + str(open_door_counter))                        
             #log result in mongo
-            is_open=closed_door_counter<n_closed
+            is_open=closed_door_counter<self.n_closed_door
             if log_to_mongo:
                 try:
                     if target_pose is not None:
@@ -192,7 +196,7 @@ class DoorUtils(object):
         else:
             return False
     
-    def wait_door(self, wait_timeout, target_pose=None, n_closed=10, log_to_mongo=True, speak=True,consecutive_open_secs=2):
+    def wait_door(self, wait_timeout, target_pose=None, log_to_mongo=True, speak=True,consecutive_open_secs=2):
         self.just_spoken=False
         open_time=0
         self.wait_elapsed=0.0
@@ -200,7 +204,7 @@ class DoorUtils(object):
         cu.display_content(self.display_no, self.screen_message)
         while self.is_active and self.wait_elapsed < wait_timeout and abs(open_time-consecutive_open_secs)>(self.wait_frequency/2):
             rospy.loginfo("Door wait and pass action server calling check door")
-            door_open=self.check_door(target_pose, n_closed, False)
+            door_open=self.check_door(target_pose, False)
             if door_open:
                 open_time+=self.wait_frequency
             else:
@@ -342,14 +346,42 @@ class DoorUtils(object):
             cmd = new_cmd
             rospy.loginfo("Publishing to cmd_vel: base_cmd.linear.x=" + str(cmd.linear.x) + " cmd.angular.z=" + str(cmd.angular.z))
             self.cmd_vel_pub.publish(cmd)
-        
+     
+     
+    def move_base_pass(self, goal):
+        if self.is_active:
+            mb_client = SimpleActionClient("/move_base", MoveBaseAction)
+            mb_client.wait_for_server()
+            self.clear_costmaps()
+            self.speaker.send_goal(maryttsGoal(text=self.talk_proxy.get_random_text("door_pass_going")))
+            mb_client.send_goal(goal)
+            while self.is_active and not mb_client.wait_for_result(rospy.Duration(0.1)):
+                continue
+            if not self.is_active:
+                mb_client.cancel_all_goals()
+            status = mb_client.get_state()
+            if status == GoalStatus.SUCCEEDED:
+                self.speaker.send_goal(maryttsGoal(text=self.talk_proxy.get_random_text("door_pass_thanks")))
+            return status
+        else:
+            return GoalStatus.ABORTED 
+     
+    def clear_costmaps(self):
+        try:
+            rospy.wait_for_service('move_base/clear_costmaps', timeout=5)
+            clear_costmaps = rospy.ServiceProxy('move_base/clear_costmaps', Empty)
+            clear_costmaps()
+        except Exception, e:
+            rospy.logwarn('Exception on clear service call: %s' % e) 
+     
     def set_params(self,
                   max_trans_vel=None,
                   max_rot_vel=None,
                   vel_scale_factor=None,
                   base_radius=None,
                   getting_further_counter_threshold=None,
-                  distance_to_success=None):
+                  distance_to_success=None,
+                  n_closed_door=None):
         if max_trans_vel is not None:
             self.max_trans_vel=max_trans_vel
         if max_rot_vel is not None:
@@ -362,6 +394,8 @@ class DoorUtils(object):
             self.getting_further_counter_threshold=getting_further_counter_threshold
         if distance_to_success is not None:
             self.distance_to_success=distance_to_success
+        if n_closed_door is not None:
+            self.n_closed_door = n_closed_door
         
         
         
