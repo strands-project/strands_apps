@@ -20,8 +20,8 @@ Changelog for package door_pass
 * correct door check node name
 * Contributors: Bruno Lacerda, Nick Hawes
 
-Forthcoming
------------
+0.2.5 (2016-11-02)
+------------------
 * adding door prediction to install targets (`#63 <https://github.com/strands-project/strands_apps/issues/63>`_)
 * add speech to move base door pass
 * changes to make all doors work at tsc

@@ -5,8 +5,8 @@ Changelog for package watchdog_node
 0.1.12 (2016-04-19)
 -------------------
 
-Forthcoming
------------
+0.2.5 (2016-11-02)
+------------------
 * return check to 1 min
 * Added a rate watchdog, also with interval check option
 * Contributors: Nick Hawes
