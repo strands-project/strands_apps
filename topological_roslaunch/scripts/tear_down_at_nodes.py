@@ -21,6 +21,10 @@ if __name__ == '__main__':
 
     for c in config:
         # rospy.loginfo()
-        executor = TearDownAtNodes(tear_down_nodes = c['nodes'], launch_files = c['tear_down'])
+        if not c['tear_down']:
+            rospy.logwarn("No launch files were provided to tear down. Will not create tear down executor.")
+        else:
+            executor = TearDownAtNodes(tear_down_nodes = c['nodes'], launch_files = c['tear_down'])
+            rospy.loginfo("Created tear down executor.")
 
     rospy.spin()

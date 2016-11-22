@@ -21,6 +21,10 @@ if __name__ == '__main__':
 
     for c in config:
         # rospy.loginfo()
-        executor = BringUpAtNodes(bring_up_nodes = c['nodes'], launch_files = c['bring_up'])
+        if not c['bring_up']:
+            rospy.logwarn("No launch files were provided to bring up. Will not create bring up executor.")
+        else:
+            executor = BringUpAtNodes(bring_up_nodes = c['nodes'], launch_files = c['bring_up'])
+            rospy.loginfo("Created bring up executor.")
 
     rospy.spin()
