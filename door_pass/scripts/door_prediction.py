@@ -32,6 +32,8 @@ class door_prediction(object):
 
     def __init__(self, epochs) :
         rospy.on_shutdown(self._on_node_shutdown)
+        self.doors=[]
+        self.unknowns=[]
         self.top_map = []
         self.map_received =False
         self.range = epochs
