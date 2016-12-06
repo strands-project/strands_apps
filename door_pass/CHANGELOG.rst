@@ -20,6 +20,17 @@ Changelog for package door_pass
 * correct door check node name
 * Contributors: Bruno Lacerda, Nick Hawes
 
+0.2.5 (2016-11-02)
+------------------
+* adding door prediction to install targets (`#63 <https://github.com/strands-project/strands_apps/issues/63>`_)
+* add speech to move base door pass
+* changes to make all doors work at tsc
+* add door_wait_and_move_base
+* correct bug
+* add closed door readings threshold as param to door actions
+* correct doorPassing param names. adding log checks param
+* Contributors: Bruno Lacerda, Jaime Pulido Fentanes, Nick Hawes
+
 0.2.4 (2016-06-07)
 ------------------
 * sorting out for release and cleaning up hopefully unnecessary import whicih was messing up other imports

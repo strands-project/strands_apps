@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>static_transform_manager</name>
-  <version>0.2.4</version>
+  <version>0.2.5</version>
   <description>
     The static_transform_manager package provides a node providing services to set
 	static transformations, similar to starting a tf/static_transform_publisher node.

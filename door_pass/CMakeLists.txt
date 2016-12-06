@@ -87,6 +87,7 @@ target_link_libraries (door_detect  ${catkin_LIBRARIES})
    scripts/door_checking.py
    scripts/door_wait_and_pass.py
    scripts/door_waiting.py
+   scripts/door_prediction.py
    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
  )
 

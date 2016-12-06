@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 
 import rospy
-from topological_roslaunch import TearDownAtNodes
+from topological_roslaunch import BringUpAtNodes
 import yaml
 import sys
 
 if __name__ == '__main__':
 
-    rospy.init_node('tear_down_at_nodes')
+    rospy.init_node('bring_up_at_nodes')
 
     try:
         config_file =  rospy.get_param("~config")
@@ -21,10 +21,10 @@ if __name__ == '__main__':
 
     for c in config:
         # rospy.loginfo()
-        if not c['tear_down']:
-            rospy.logwarn("No launch files were provided to tear down. Will not create tear down executor.")
+        if not c['bring_up']:
+            rospy.logwarn("No launch files were provided to bring up. Will not create bring up executor.")
         else:
-            executor = TearDownAtNodes(tear_down_nodes = c['nodes'], launch_files = c['tear_down'])
-            rospy.loginfo("Created tear down executor.")
+            executor = BringUpAtNodes(bring_up_nodes = c['nodes'], launch_files = c['bring_up'])
+            rospy.loginfo("Created bring up executor.")
 
     rospy.spin()
