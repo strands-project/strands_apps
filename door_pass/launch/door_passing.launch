@@ -6,7 +6,7 @@
         <param name="n_closed_door" value="15"/>
     </node>
     <node pkg="door_pass" type="door_wait_and_move_base.py" name="door_wait_and_move_base"  output="screen">
-        <param name="n_closed_door" value="15"/>
+        <param name="n_closed_door" value="4"/>
     </node>
     <node pkg="door_pass" type="door_waiting.py" name="door_waiting"  output="screen"/>
     <node pkg="door_pass" type="door_prediction.py" name="door_prediction"  output="screen"/>
