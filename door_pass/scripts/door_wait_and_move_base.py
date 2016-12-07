@@ -56,9 +56,9 @@ class DoorWaitAndMoveBase(object):
             return
 
         if self.stand_alone:
-            consecutive_open_secs=2.5
-        else:
             consecutive_open_secs=1.5
+        else:
+            consecutive_open_secs=0.5
         opened=self.door_utils.wait_door(self.wait_timeout, target_pose, False, self.stand_alone, consecutive_open_secs)
         
         if self.door_as.is_preempt_requested():
