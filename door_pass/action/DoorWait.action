@@ -1,4 +1,6 @@
-geometry_msgs/PoseStamped target_pose
+geometry_msgs/PoseStamped target_pose #pose of the waypoint on the other side of the door
+uint32 n_closed_door #number of laser readings (out of 37) that need to be considered closed for the door to be considered closed, i.e., the less this value the more conservative the robot is in assuming the door is open
+uint32 consecutive_open_secs #needs to see the door open for this ammount of time before deciding to go through
 float64 wait_timeout
 ---
 bool open

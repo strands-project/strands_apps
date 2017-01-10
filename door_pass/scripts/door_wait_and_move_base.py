@@ -14,7 +14,8 @@ class DoorWaitAndMoveBase(object):
         base_radius=rospy.get_param("~base_radius", 0.31)
         getting_further_counter_threshold=rospy.get_param("~getting_further_counter_threshold", 5)
         distance_to_success=rospy.get_param("~distance_to_success", 0.2)
-        n_closed_door=rospy.get_param("~n_closed_door", 20)
+        n_closed_door=rospy.get_param("~n_closed_door", 4)
+        consecutive_open_secs = rospy.get_param('~consecutive_open_secs', 1.5)
         self.wait_timeout=rospy.get_param("~wait_timeout", 60)
         self.stand_alone=rospy.get_param("~do_waiting", False)
           
@@ -25,7 +26,8 @@ class DoorWaitAndMoveBase(object):
                                   base_radius=base_radius,
                                   getting_further_counter_threshold=getting_further_counter_threshold,
                                   distance_to_success=distance_to_success,
-                                  n_closed_door = n_closed_door)
+                                  n_closed_door = n_closed_door,
+                                  consecutive_open_secs = consecutive_open_secs)
         
         self.mon_nav_status_sub=rospy.Subscriber("/monitored_navigation/status", GoalStatusArray, self.mon_nav_status_cb)
         
@@ -45,8 +47,10 @@ class DoorWaitAndMoveBase(object):
 
     def execute_cb(self, goal):
         self.door_utils.activate()
-        n_closed_door=rospy.get_param("~n_closed_door", 40)  
-        self.door_utils.set_params(n_closed_door = n_closed_door)
+        n_closed_door=rospy.get_param("~n_closed_door", 4)
+        consecutive_open_secs = rospy.get_param('~consecutive_open_secs', 1.5)
+        self.door_utils.set_params(n_closed_door = n_closed_door,
+                                   consecutive_open_secs = consecutive_open_secs)
         
         target_pose=goal.target_pose.pose
         rospy.loginfo("Door wait and move base action server calling rotate towards pose")
@@ -56,10 +60,10 @@ class DoorWaitAndMoveBase(object):
             return
 
         if self.stand_alone:
-            consecutive_open_secs=1.5
+            opened=self.door_utils.wait_door(self.wait_timeout, target_pose, False, True)
         else:
-            consecutive_open_secs=0.5
-        opened=self.door_utils.wait_door(self.wait_timeout, target_pose, False, self.stand_alone, consecutive_open_secs)
+            opened = True #door wait outputted succeeded
+            
         
         if self.door_as.is_preempt_requested():
             self.finish_execution(GoalStatus.PREEMPTED)
