@@ -203,7 +203,7 @@ class DoorUtils(object):
         open_time=0
         self.wait_elapsed=0.0
         wait_timer=rospy.Timer(rospy.Duration(self.wait_frequency), self.wait_timer_cb)
-        cu.display_content(self.display_no, self.screen_message)
+        cu.display_relative_page(self.display_no, 'door_help.html')
         while self.is_active and self.wait_elapsed < wait_timeout and abs(open_time-self.consecutive_open_secs)>(self.wait_frequency/2):
             rospy.loginfo("Door wait and pass action server calling check door")
             door_open=self.check_door(target_pose, False)
