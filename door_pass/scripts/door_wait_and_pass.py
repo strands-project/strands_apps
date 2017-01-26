@@ -72,11 +72,12 @@ class DoorWaitAndPass(object):
             self.finish_execution(GoalStatus.PREEMPTED)
             return
 
-        if self.stand_alone:
-            opened=self.door_utils.wait_door(self.wait_timeout, target_pose, False, True)
-        else:
-            opened = True
-        
+        current_consecutive_open_secs = rospy.get_param('~consecutive_open_secs', 2)
+        if not self.stand_alone:
+            self.door_utils.set_params(consecutive_open_secs = 0.1)
+        opened=self.door_utils.wait_door(self.wait_timeout, target_pose, False, True)
+        self.door_utils.set_params(consecutive_open_secs = current_consecutive_open_secs)
+
         
         if self.door_as.is_preempt_requested():
             self.finish_execution(GoalStatus.PREEMPTED)
