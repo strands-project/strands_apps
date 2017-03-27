@@ -14,8 +14,8 @@ class DoorWait(object):
         base_radius=rospy.get_param("~base_radius", 0.31)
         getting_further_counter_threshold=rospy.get_param("~getting_further_counter_threshold", 5)
         distance_to_success=rospy.get_param("~distance_to_success", 0.2)
-        n_closed_door=rospy.get_param("~n_closed_door", 40)  
-        
+        n_closed_door=rospy.get_param("~n_closed_door", 15)  
+        consecutive_open_secs = rospy.get_param('~consecutive_open_secs', 2)
         
         self.door_utils=DoorUtils(max_trans_vel=max_trans_vel,
                                   max_rot_vel=max_rot_vel,
@@ -23,7 +23,8 @@ class DoorWait(object):
                                   base_radius=base_radius,
                                   getting_further_counter_threshold=getting_further_counter_threshold,
                                   distance_to_success=distance_to_success,
-                                  n_closed_door = n_closed_door)
+                                  n_closed_door = n_closed_door,
+                                  consecutive_open_secs = consecutive_open_secs)
         
         
         self.door_as=actionlib.SimpleActionServer('door_wait', DoorWaitAction, execute_cb = self.execute_cb, auto_start=False) 
@@ -41,14 +42,22 @@ class DoorWait(object):
         base_radius=rospy.get_param("~/base_radius", 0.31)
         getting_further_counter_threshold=rospy.get_param("~/getting_further_counter_threshold", 5)
         distance_to_success=rospy.get_param("~/distance_to_success", 0.2)
-        n_closed_door=rospy.get_param("~n_closed_door", 40)
+        if goal.n_closed_door != 0:
+            n_closed_door = goal.n_closed_door
+        else:
+            n_closed_door=rospy.get_param("~n_closed_door", 15)
+        if goal.consecutive_open_secs != 0:
+            consecutive_open_secs = goal.consecutive_open_secs
+        else:
+            consecutive_open_secs =  rospy.get_param('~consecutive_open_secs', 2)
         self.door_utils.set_params(max_trans_vel=max_trans_vel,
                                   max_rot_vel=max_rot_vel,
                                   vel_scale_factor=vel_scale_factor,
                                   base_radius=base_radius,
                                   getting_further_counter_threshold=getting_further_counter_threshold,
                                   distance_to_success=distance_to_success,
-                                  n_closed_door = n_closed_door)
+                                  n_closed_door=n_closed_door,
+                                  consecutive_open_secs = consecutive_open_secs)
         
         target_pose=goal.target_pose.pose
         wait_timeout=goal.wait_timeout
@@ -59,7 +68,10 @@ class DoorWait(object):
             self.finish_execution(GoalStatus.PREEMPTED)
             return
         
-        opened=self.door_utils.wait_door(wait_timeout, target_pose, 40)
+        opened=self.door_utils.wait_door(wait_timeout = wait_timeout,
+                                        target_pose = target_pose,
+                                        log_to_mongo = True,
+                                        speak = True)
         
         if self.door_as.is_preempt_requested():
             self.finish_execution(GoalStatus.PREEMPTED)

@@ -19,7 +19,8 @@ class DoorCheck(object):
                                   base_radius=0,
                                   getting_further_counter_threshold=0,
                                   distance_to_success=0,
-                                  n_closed_door=n_closed_door)
+                                  n_closed_door=n_closed_door,
+                                  consecutive_open_secs = 0)
         door_utils.activate()
         door_open=door_utils.check_door()
         if door_open:

@@ -14,15 +14,16 @@ class DoorPass(object):
         base_radius=rospy.get_param("~base_radius", 0.31)
         getting_further_counter_threshold=rospy.get_param("~getting_further_counter_threshold", 5)
         distance_to_success=rospy.get_param("~distance_to_success", 0.2)
-        n_closed_door=rospy.get_param("~n_closed_door", 40)
         self.log_checks = rospy.get_param("~log_checks", False)
+        n_closed_door = rospy.get_param("~n_closed_door", 20)
         self.door_utils=DoorUtils(max_trans_vel=max_trans_vel,
                                   max_rot_vel=max_rot_vel,
                                   vel_scale_factor=vel_scale_factor,
                                   base_radius=base_radius,
                                   getting_further_counter_threshold=getting_further_counter_threshold,
                                   distance_to_success=distance_to_success,
-                                  n_closed_door = n_closed_door)
+                                  n_closed_door = n_closed_door,
+                                  consecutive_open_secs = 0)
         
         self.mon_nav_status_sub=rospy.Subscriber("/monitored_navigation/status", GoalStatusArray, self.mon_nav_status_cb)
         
@@ -49,14 +50,14 @@ class DoorPass(object):
         base_radius=rospy.get_param("~base_radius", 0.31)
         getting_further_counter_threshold=rospy.get_param("~getting_further_counter_threshold", 5)
         distance_to_success=rospy.get_param("~distance_to_success", 0.2)
-        n_closed_door=rospy.get_param("~n_closed_door", 40)
+        n_closed_door = rospy.get_param("~n_closed_door", 20)
         self.door_utils.set_params(max_trans_vel=max_trans_vel,
                                   max_rot_vel=max_rot_vel,
                                   vel_scale_factor=vel_scale_factor,
                                   base_radius=base_radius,
                                   getting_further_counter_threshold=getting_further_counter_threshold,
                                   distance_to_success=distance_to_success,
-                                  n_closed_door=n_closed_door)
+                                  n_closed_door = n_closed_door)
         
         target_pose=goal.target_pose.pose
         rospy.loginfo("Door pass action server calling rotate towards pose")

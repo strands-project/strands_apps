@@ -30,7 +30,8 @@ class DoorUtils(object):
                  base_radius,
                  getting_further_counter_threshold,
                  distance_to_success,
-                 n_closed_door):
+                 n_closed_door,
+                 consecutive_open_secs):
         self.max_trans_vel=max_trans_vel
         self.max_rot_vel=max_rot_vel
         self.vel_scale_factor=vel_scale_factor
@@ -38,6 +39,7 @@ class DoorUtils(object):
         self.getting_further_counter_threshold=getting_further_counter_threshold #limit of number of consecutive  poses getting further away from the goal to output with 'aborted'
         self.distance_to_success=distance_to_success #once the robot is less than this value from the goal, it stops with success
         self.n_closed_door=n_closed_door #number of laser readings less than the distance to goal in order to classify a door as closed
+        self.consecutive_open_secs = consecutive_open_secs
         self.cmd_vel_pub = rospy.Publisher("/cmd_vel", Twist, queue_size=1)
         self.last_twist = None
 
@@ -196,13 +198,13 @@ class DoorUtils(object):
         else:
             return False
     
-    def wait_door(self, wait_timeout, target_pose=None, log_to_mongo=True, speak=True,consecutive_open_secs=2):
+    def wait_door(self, wait_timeout, target_pose=None, log_to_mongo=True, speak=True):
         self.just_spoken=False
         open_time=0
         self.wait_elapsed=0.0
         wait_timer=rospy.Timer(rospy.Duration(self.wait_frequency), self.wait_timer_cb)
-        cu.display_content(self.display_no, self.screen_message)
-        while self.is_active and self.wait_elapsed < wait_timeout and abs(open_time-consecutive_open_secs)>(self.wait_frequency/2):
+        cu.display_relative_page(self.display_no, 'door_help.html')
+        while self.is_active and self.wait_elapsed < wait_timeout and abs(open_time-self.consecutive_open_secs)>(self.wait_frequency/2):
             rospy.loginfo("Door wait and pass action server calling check door")
             door_open=self.check_door(target_pose, False)
             if door_open:
@@ -219,9 +221,8 @@ class DoorUtils(object):
         if not self.is_active:
             return False
       
-        print open_time
-        print consecutive_open_secs
-        opened=(abs(open_time-consecutive_open_secs)<=(self.wait_frequency/2))
+
+        opened=(abs(open_time-self.consecutive_open_secs)<=(self.wait_frequency/2))
         if log_to_mongo:
             try:
                 if target_pose is not None:
@@ -381,7 +382,8 @@ class DoorUtils(object):
                   base_radius=None,
                   getting_further_counter_threshold=None,
                   distance_to_success=None,
-                  n_closed_door=None):
+                  n_closed_door=None,
+                  consecutive_open_secs=None):
         if max_trans_vel is not None:
             self.max_trans_vel=max_trans_vel
         if max_rot_vel is not None:
@@ -396,6 +398,8 @@ class DoorUtils(object):
             self.distance_to_success=distance_to_success
         if n_closed_door is not None:
             self.n_closed_door = n_closed_door
+        if consecutive_open_secs is not None:
+            self.consecutive_open_secs = consecutive_open_secs
         
         
         
