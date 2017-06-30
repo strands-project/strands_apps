@@ -2,8 +2,8 @@
 Changelog for package topological_roslaunch
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.2.6 (2017-06-30)
+------------------
 * Add warning when no launch information received
 * Improve teardown/bringup mechanics
   Can now bring up launch files at a set of nodes, in the same way as with the

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>topological_roslaunch</name>
-  <version>0.2.5</version>
+  <version>0.2.6</version>
   <description>A package to trigger roslaunch_axserver at topological nodes.</description>
 
   <maintainer email="n.a.hawes@cs.bham.ac.uk">Nick Hawes</maintainer>

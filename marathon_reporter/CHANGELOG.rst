@@ -5,8 +5,8 @@ Changelog for package marathon_reporter
 0.1.12 (2016-04-19)
 -------------------
 
-Forthcoming
------------
+0.2.6 (2017-06-30)
+------------------
 * using system's requests
 * Contributors: Marc Hanheide
 

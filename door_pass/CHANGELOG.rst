@@ -20,8 +20,8 @@ Changelog for package door_pass
 * correct door check node name
 * Contributors: Bruno Lacerda, Nick Hawes
 
-Forthcoming
------------
+0.2.6 (2017-06-30)
+------------------
 * always check door before passing
 * display arrow while waiting
 * updates to use door waiting properly
