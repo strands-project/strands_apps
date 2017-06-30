@@ -20,6 +20,18 @@ Changelog for package door_pass
 * correct door check node name
 * Contributors: Bruno Lacerda, Nick Hawes
 
+Forthcoming
+-----------
+* always check door before passing
+* display arrow while waiting
+* updates to use door waiting properly
+* reduce required time of seeing the door open for the glass door.
+* less confident on open doors when doing door_wait_and_move_base as this action is to be used for glass doors
+* Fixing bug when no doors in the environment (`#64 <https://github.com/strands-project/strands_apps/issues/64>`_)
+  * adding door prediction to install targets
+  * fixing bug when no doors in the environment
+* Contributors: Bruno Lacerda, Jaime Pulido Fentanes
+
 0.2.5 (2016-11-02)
 ------------------
 * adding door prediction to install targets (`#63 <https://github.com/strands-project/strands_apps/issues/63>`_)
