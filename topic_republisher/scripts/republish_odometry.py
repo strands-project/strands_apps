@@ -8,8 +8,8 @@ class OdometryRepublisher():
 
 	def __init__(self):
 		rospy.init_node('odometry_republisher')
-		self.pub = rospy.Publisher('/odom', Odometry)
-                rospy.Subscriber("/odom_morse", Odometry, self.callback)
+		self.pub = rospy.Publisher('odom', Odometry)
+                rospy.Subscriber("odom_morse", Odometry, self.callback)
 		rospy.loginfo(rospy.get_name() + " setting up")
 
 	def callback(self,data):

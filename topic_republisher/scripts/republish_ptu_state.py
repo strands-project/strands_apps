@@ -8,8 +8,8 @@ class JointStateRepublisher():
 
 	def __init__(self):
 		rospy.init_node('ptu_state_republisher')
-		self.pub = rospy.Publisher('/ptu/state', JointState)
-                rospy.Subscriber("/ptu_state", JointState, self.callback)
+		self.pub = rospy.Publisher('ptu/state', JointState)
+                rospy.Subscriber("ptu_state", JointState, self.callback)
 		rospy.loginfo(rospy.get_name() + " setting up")
 
 	def callback(self,data):

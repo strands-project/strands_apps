@@ -9,8 +9,8 @@ class JointStateRepublisher():
 
 	def __init__(self):
 		rospy.init_node('jointstate_republisher')
-		self.pub = rospy.Publisher('/ptu', Vector3)
-                rospy.Subscriber("/ptu/cmd", JointState, self.callback)
+		self.pub = rospy.Publisher('ptu', Vector3)
+                rospy.Subscriber("ptu/cmd", JointState, self.callback)
 		rospy.loginfo(rospy.get_name() + " setting up")
 
 	def callback(self,data):
